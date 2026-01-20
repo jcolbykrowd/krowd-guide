@@ -7,6 +7,44 @@ import {
 } from 'lucide-react';
 
 // ============================================================================
+// STYLES - Defined as constant to ensure they're always available
+// ============================================================================
+
+const GLOBAL_STYLES = `
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  @keyframes pulseDot {
+    0%, 100% { opacity: 0.4; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  * {
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+  }
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+`;
+
+// ============================================================================
 // CONSTANTS
 // ============================================================================
 
@@ -55,564 +93,1195 @@ const CATEGORIES = [
 // HELPERS
 // ============================================================================
 
-const getVibeFromCrowd = (crowd) => {
-  if (crowd >= 0.85) return { label: 'PACKED', color: '#ef4444', bg: 'bg-red-500' };
-  if (crowd >= 0.60) return { label: 'HYPE', color: '#f97316', bg: 'bg-orange-500' };
-  if (crowd >= 0.40) return { label: 'MODERATE', color: '#3b82f6', bg: 'bg-blue-500' };
-  return { label: 'CHILL', color: '#22c55e', bg: 'bg-green-500' };
-};
+function getVibeFromCrowd(crowd) {
+  if (crowd >= 0.85) return { label: 'PACKED', color: '#ef4444', bg: '#ef4444' };
+  if (crowd >= 0.60) return { label: 'HYPE', color: '#f97316', bg: '#f97316' };
+  if (crowd >= 0.40) return { label: 'MODERATE', color: '#3b82f6', bg: '#3b82f6' };
+  return { label: 'CHILL', color: '#22c55e', bg: '#22c55e' };
+}
 
-const getDressCodeInfo = (code) => {
+function getDressCodeInfo(code) {
   const codes = {
     casual: { label: 'Casual', color: '#22c55e', icon: '👟' },
     smart: { label: 'Smart Casual', color: '#3b82f6', icon: '👔' },
     upscale: { label: 'Upscale', color: '#a855f7', icon: '🎩' }
   };
   return codes[code] || codes.casual;
-};
+}
 
 // ============================================================================
 // SPLASH SCREEN
 // ============================================================================
 
-const SplashScreen = ({ onComplete }) => {
+function SplashScreen({ onComplete }) {
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
+    let mounted = true;
+    
     const timers = [
-      setTimeout(() => setPhase(1), 300),
-      setTimeout(() => setPhase(2), 600),
-      setTimeout(() => setPhase(3), 1200),
-      setTimeout(() => setPhase(4), 2500),
-      setTimeout(() => onComplete(), 3000),
+      setTimeout(() => mounted && setPhase(1), 300),
+      setTimeout(() => mounted && setPhase(2), 600),
+      setTimeout(() => mounted && setPhase(3), 1200),
+      setTimeout(() => mounted && setPhase(4), 2500),
+      setTimeout(() => mounted && onComplete(), 3000),
     ];
-    return () => timers.forEach(clearTimeout);
+    
+    return () => {
+      mounted = false;
+      timers.forEach(t => clearTimeout(t));
+    };
   }, [onComplete]);
 
   return (
-    <div className={`fixed inset-0 bg-zinc-950 flex flex-col items-center justify-center z-50 transition-opacity duration-500 ${phase >= 4 ? 'opacity-0' : 'opacity-100'}`}>
-      <div className="absolute inset-0 opacity-[0.03] overflow-hidden text-white">
-        <MapPin className="absolute top-[10%] left-[10%]" size={40} />
-        <Music className="absolute top-[15%] right-[15%]" size={32} />
-        <Wine className="absolute bottom-[25%] left-[15%]" size={36} />
-        <Building className="absolute bottom-[15%] right-[12%]" size={28} />
+    <div 
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: '#09090b',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 50,
+        opacity: phase >= 4 ? 0 : 1,
+        transition: 'opacity 0.5s ease'
+      }}
+    >
+      {/* Background Icons */}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', opacity: 0.03 }}>
+        <MapPin style={{ position: 'absolute', top: '10%', left: '10%', color: 'white' }} size={40} />
+        <Music style={{ position: 'absolute', top: '15%', right: '15%', color: 'white' }} size={32} />
+        <Wine style={{ position: 'absolute', bottom: '25%', left: '15%', color: 'white' }} size={36} />
+        <Building style={{ position: 'absolute', bottom: '15%', right: '12%', color: 'white' }} size={28} />
       </div>
 
+      {/* Glow */}
       <div 
-        className={`absolute w-80 h-80 rounded-full transition-opacity duration-1000 ${phase >= 3 ? 'opacity-100' : 'opacity-0'}`}
-        style={{ background: `radial-gradient(circle, ${ACCENT}30 0%, transparent 70%)`, filter: 'blur(60px)' }}
+        style={{
+          position: 'absolute',
+          width: 320,
+          height: 320,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${ACCENT}30 0%, transparent 70%)`,
+          filter: 'blur(60px)',
+          opacity: phase >= 3 ? 1 : 0,
+          transition: 'opacity 1s ease'
+        }}
       />
 
-      <div className="flex items-center gap-2 relative z-10">
-        <span className={`text-5xl font-black tracking-tight text-white transition-all duration-700 ease-out ${phase >= 1 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-90'}`}>
+      {/* Logo */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative', zIndex: 10 }}>
+        <span 
+          style={{
+            fontSize: 48,
+            fontWeight: 900,
+            letterSpacing: '-0.025em',
+            color: 'white',
+            opacity: phase >= 1 ? 1 : 0,
+            transform: phase >= 1 ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.9)',
+            transition: 'all 0.7s ease-out'
+          }}
+        >
           Krowd
         </span>
-        <span className={`text-5xl font-black tracking-tight transition-all duration-700 ease-out ${phase >= 2 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-90'}`} style={{ color: ACCENT }}>
+        <span 
+          style={{
+            fontSize: 48,
+            fontWeight: 900,
+            letterSpacing: '-0.025em',
+            color: ACCENT,
+            opacity: phase >= 2 ? 1 : 0,
+            transform: phase >= 2 ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.9)',
+            transition: 'all 0.7s ease-out'
+          }}
+        >
           Guide
         </span>
       </div>
 
-      <p className={`text-base tracking-widest text-zinc-400 uppercase mt-5 transition-all duration-700 ease-out relative z-10 ${phase >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+      {/* Tagline */}
+      <p 
+        style={{
+          fontSize: 16,
+          letterSpacing: '0.1em',
+          color: '#a1a1aa',
+          textTransform: 'uppercase',
+          marginTop: 20,
+          position: 'relative',
+          zIndex: 10,
+          opacity: phase >= 3 ? 1 : 0,
+          transform: phase >= 3 ? 'translateY(0)' : 'translateY(16px)',
+          transition: 'all 0.7s ease-out'
+        }}
+      >
         Know Before You Go
       </p>
 
-      <div className={`flex gap-2.5 mt-10 transition-opacity duration-500 ${phase >= 3 ? 'opacity-100' : 'opacity-0'}`}>
+      {/* Loading Dots */}
+      <div 
+        style={{ 
+          display: 'flex', 
+          gap: 10, 
+          marginTop: 40,
+          opacity: phase >= 3 ? 1 : 0, 
+          transition: 'opacity 0.5s ease' 
+        }}
+      >
         {[0, 1, 2].map(i => (
           <div 
             key={i}
-            className="w-2.5 h-2.5 rounded-full animate-dot-pulse"
-            style={{ animationDelay: `${i * 200}ms` }} 
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
+              backgroundColor: ACCENT,
+              animation: 'pulseDot 1.4s ease-in-out infinite',
+              animationDelay: `${i * 200}ms`
+            }}
           />
         ))}
       </div>
     </div>
   );
-};
+}
 
 // ============================================================================
-// LOCATION PERMISSION SCREEN - FIXED with skip option
+// LOCATION SCREEN - Fixed with proper timeout and skip functionality
 // ============================================================================
 
-const LocationScreen = ({ onContinue }) => {
-  const [status, setStatus] = useState('prompt'); // prompt, requesting, denied, granted, unsupported
-  const [fadeIn, setFadeIn] = useState(false);
+function LocationScreen({ onContinue }) {
+  const [status, setStatus] = useState('prompt');
+  const [visible, setVisible] = useState(false);
 
+  // Fade in on mount
   useEffect(() => {
-    setTimeout(() => setFadeIn(true), 100);
+    const timer = setTimeout(() => setVisible(true), 50);
+    return () => clearTimeout(timer);
   }, []);
 
-  const requestLocation = () => {
-    // Check if geolocation is supported
-    if (!navigator.geolocation) {
-      console.log('[Location] Geolocation not supported');
+  function handleEnableLocation() {
+    // Check if geolocation exists
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
       setStatus('unsupported');
       return;
     }
 
     setStatus('requesting');
-    console.log('[Location] Requesting permission...');
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        console.log('[Location] Permission granted:', position.coords.latitude, position.coords.longitude);
-        setStatus('granted');
-        // Small delay to show success state
-        setTimeout(() => onContinue(), 800);
-      },
-      (error) => {
-        console.log('[Location] Permission denied or error:', error.message, error.code);
-        setStatus('denied');
-      },
-      { 
-        enableHighAccuracy: false, // Less strict for faster response
-        timeout: 15000, 
-        maximumAge: 300000 // Allow cached position up to 5 min
-      }
-    );
-  };
+    // BUG FIX: Add timeout fallback - if browser never responds, show error state
+    const fallbackTimer = setTimeout(() => {
+      setStatus('timeout');
+    }, 12000);
 
-  const handleSkip = () => {
-    console.log('[Location] User skipped location permission');
+    try {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          clearTimeout(fallbackTimer);
+          setStatus('granted');
+          // Delay before continuing to show success state
+          setTimeout(() => onContinue(), 1000);
+        },
+        (error) => {
+          clearTimeout(fallbackTimer);
+          console.log('Location error:', error.code, error.message);
+          setStatus('denied');
+        },
+        { 
+          enableHighAccuracy: false, 
+          timeout: 10000, 
+          maximumAge: 300000 
+        }
+      );
+    } catch (err) {
+      clearTimeout(fallbackTimer);
+      console.log('Geolocation exception:', err);
+      setStatus('error');
+    }
+  }
+
+  function handleSkip() {
     onContinue();
-  };
+  }
 
   // Success state
   if (status === 'granted') {
     return (
-      <div className="fixed inset-0 bg-zinc-950 flex flex-col items-center justify-center px-8 z-50">
-        <div className="w-24 h-24 rounded-full bg-green-500/20 flex items-center justify-center mb-6">
-          <CheckCircle size={56} className="text-green-500" />
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: '#09090b',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 32,
+        zIndex: 50
+      }}>
+        <div style={{
+          width: 96,
+          height: 96,
+          borderRadius: '50%',
+          backgroundColor: 'rgba(34, 197, 94, 0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 24
+        }}>
+          <CheckCircle size={56} color="#22c55e" />
         </div>
-        <h1 className="text-2xl font-bold text-white">You're all set!</h1>
-        <p className="text-zinc-400 mt-2">Finding venues near you...</p>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: 'white' }}>You're all set!</h1>
+        <p style={{ color: '#a1a1aa', marginTop: 8 }}>Finding venues near you...</p>
       </div>
     );
   }
 
+  const showError = status === 'denied' || status === 'unsupported' || status === 'timeout' || status === 'error';
+  const isRequesting = status === 'requesting';
+
   return (
-    <div className={`fixed inset-0 bg-zinc-950 flex flex-col items-center justify-center px-8 z-50 transition-opacity duration-500 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
-      {/* Background */}
-      <div className="absolute inset-0 opacity-[0.04]">
-        <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      backgroundColor: '#09090b',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 32,
+      zIndex: 50,
+      opacity: visible ? 1 : 0,
+      transition: 'opacity 0.5s ease'
+    }}>
+      {/* Background Pattern */}
+      <div style={{ position: 'absolute', inset: 0, opacity: 0.04 }}>
+        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
           <path d="M10 30 L30 30 L30 50 L50 50 L50 30 L70 30 L70 60 L90 60" stroke="#fff" strokeWidth="0.4" fill="none" />
           <path d="M20 10 L20 90" stroke="#fff" strokeWidth="0.25" fill="none" />
           <path d="M50 5 L50 95" stroke="#fff" strokeWidth="0.25" fill="none" />
-          <circle cx="30" cy="30" r="2.5" fill="#fff" opacity="0.6" />
-          <circle cx="50" cy="50" r="3.5" fill="#fff" opacity="0.6" />
+          <circle cx="30" cy="30" r="2.5" fill="#fff" />
+          <circle cx="50" cy="50" r="3.5" fill="#fff" />
         </svg>
       </div>
 
       {/* Icon */}
-      <div className="relative mb-10">
-        <div className="absolute -inset-4 rounded-full animate-pulse" style={{ background: `${status === 'denied' ? '#ef4444' : ACCENT}20`, filter: 'blur(30px)' }} />
-        <div className="relative w-28 h-28 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-800">
-          {status === 'denied' || status === 'unsupported' ? (
-            <AlertCircle size={56} className="text-orange-500" />
-          ) : status === 'requesting' ? (
-            <div className="w-12 h-12 border-4 border-zinc-700 border-t-pink-500 rounded-full animate-spin" />
+      <div style={{ position: 'relative', marginBottom: 40 }}>
+        <div 
+          style={{
+            position: 'absolute',
+            inset: -16,
+            borderRadius: '50%',
+            background: showError ? 'rgba(249, 115, 22, 0.2)' : `${ACCENT}20`,
+            filter: 'blur(30px)',
+            animation: 'pulse 2s ease-in-out infinite'
+          }}
+        />
+        <div style={{
+          position: 'relative',
+          width: 112,
+          height: 112,
+          borderRadius: '50%',
+          backgroundColor: '#18181b',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: '1px solid #27272a'
+        }}>
+          {showError ? (
+            <AlertCircle size={56} color="#f97316" />
+          ) : isRequesting ? (
+            <div style={{
+              width: 48,
+              height: 48,
+              border: '4px solid #3f3f46',
+              borderTopColor: ACCENT,
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }} />
           ) : (
-            <MapPin size={56} style={{ color: ACCENT }} />
+            <MapPin size={56} color={ACCENT} />
           )}
         </div>
       </div>
 
       {/* Title */}
-      <h1 className="text-3xl font-bold text-white text-center mb-4">
-        {status === 'denied' ? 'Location Unavailable' : 
-         status === 'unsupported' ? 'Location Not Supported' : 
-         status === 'requesting' ? 'Requesting Access...' :
-         'Enable Location'}
+      <h1 style={{ fontSize: 30, fontWeight: 700, color: 'white', textAlign: 'center', marginBottom: 16 }}>
+        {status === 'denied' && 'Location Unavailable'}
+        {status === 'unsupported' && 'Location Not Supported'}
+        {status === 'timeout' && 'Request Timed Out'}
+        {status === 'error' && 'Something Went Wrong'}
+        {status === 'requesting' && 'Requesting Access...'}
+        {status === 'prompt' && 'Enable Location'}
       </h1>
 
       {/* Description */}
-      <p className="text-base text-zinc-400 text-center max-w-xs mb-2 leading-relaxed">
-        {status === 'denied' 
-          ? 'We couldn\'t access your location. You can still browse venues manually or try again.'
-          : status === 'unsupported'
-          ? 'Your browser doesn\'t support location. You can still explore all venues.'
-          : status === 'requesting'
+      <p style={{ fontSize: 16, color: '#a1a1aa', textAlign: 'center', maxWidth: 280, marginBottom: 8, lineHeight: 1.6 }}>
+        {showError 
+          ? 'No worries! You can still browse all venues manually.'
+          : isRequesting
           ? 'Please allow location access when prompted by your browser.'
           : 'Krowd Guide uses your location to show nearby venues and personalized recommendations.'}
       </p>
 
       {/* Buttons */}
-      <div className="w-full max-w-xs mt-6 space-y-3">
+      <div style={{ width: '100%', maxWidth: 280, marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {status === 'prompt' && (
-          <button 
-            onClick={requestLocation}
-            className="w-full py-4 rounded-2xl font-bold text-white transition-all active:scale-95 min-h-[56px]" 
-            style={{ backgroundColor: ACCENT }}
-          >
-            Enable Location
-          </button>
+          <>
+            <button 
+              onClick={handleEnableLocation}
+              style={{
+                width: '100%',
+                padding: 16,
+                borderRadius: 16,
+                fontWeight: 700,
+                color: 'white',
+                backgroundColor: ACCENT,
+                border: 'none',
+                fontSize: 16,
+                cursor: 'pointer'
+              }}
+            >
+              Enable Location
+            </button>
+            <button 
+              onClick={handleSkip}
+              style={{
+                width: '100%',
+                padding: 12,
+                color: '#a1a1aa',
+                fontSize: 14,
+                backgroundColor: 'transparent',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              Skip for now
+            </button>
+          </>
         )}
 
-        {status === 'requesting' && (
+        {isRequesting && (
           <button 
             disabled
-            className="w-full py-4 rounded-2xl font-bold text-white opacity-50 min-h-[56px]" 
-            style={{ backgroundColor: ACCENT }}
+            style={{
+              width: '100%',
+              padding: 16,
+              borderRadius: 16,
+              fontWeight: 700,
+              color: 'white',
+              backgroundColor: ACCENT,
+              opacity: 0.5,
+              border: 'none',
+              fontSize: 16
+            }}
           >
             Waiting for permission...
           </button>
         )}
 
-        {(status === 'denied' || status === 'unsupported') && (
+        {showError && (
           <>
             <button 
-              onClick={requestLocation}
-              className="w-full py-4 rounded-2xl font-bold text-white transition-all active:scale-95 min-h-[56px] bg-zinc-800 border border-zinc-700"
+              onClick={handleEnableLocation}
+              style={{
+                width: '100%',
+                padding: 16,
+                borderRadius: 16,
+                fontWeight: 700,
+                color: 'white',
+                backgroundColor: '#27272a',
+                border: '1px solid #3f3f46',
+                fontSize: 16,
+                cursor: 'pointer'
+              }}
             >
               Try Again
             </button>
             <button 
               onClick={handleSkip}
-              className="w-full py-4 rounded-2xl font-bold text-white transition-all active:scale-95 min-h-[56px]" 
-              style={{ backgroundColor: ACCENT }}
+              style={{
+                width: '100%',
+                padding: 16,
+                borderRadius: 16,
+                fontWeight: 700,
+                color: 'white',
+                backgroundColor: ACCENT,
+                border: 'none',
+                fontSize: 16,
+                cursor: 'pointer'
+              }}
             >
               Continue Without Location
             </button>
           </>
         )}
-
-        {status === 'prompt' && (
-          <button 
-            onClick={handleSkip}
-            className="w-full py-3 text-zinc-400 text-sm transition-colors hover:text-white"
-          >
-            Skip for now
-          </button>
-        )}
       </div>
 
-      {/* Privacy note */}
-      <div className="flex items-center gap-2 mt-8 text-zinc-400">
+      {/* Privacy Note */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 32, color: '#a1a1aa' }}>
         <Lock size={16} />
-        <span className="text-sm">Your location is never shared</span>
+        <span style={{ fontSize: 14 }}>Your location is never shared</span>
       </div>
     </div>
   );
-};
+}
 
 // ============================================================================
-// MEMOIZED COMPONENTS
+// BADGE COMPONENTS
 // ============================================================================
 
-const Avatar = memo(({ size = 48 }) => (
-  <div className="rounded-full overflow-hidden border-2 border-green-500 shrink-0" style={{ width: size, height: size }}>
-    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80" alt="Profile" loading="lazy" className="w-full h-full object-cover" />
-  </div>
-));
-
-const VenueBadge = memo(({ badge }) => {
+function VenueBadge({ badge }) {
   if (!badge) return null;
-  const styles = { free: 'bg-green-500', new: 'bg-pink-600', hot: 'bg-orange-500' };
+  const colors = { free: '#22c55e', new: ACCENT, hot: '#f97316' };
   return (
-    <span className={`absolute top-3 left-3 px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase text-white ${styles[badge]}`}>
+    <span style={{
+      position: 'absolute',
+      top: 12,
+      left: 12,
+      padding: '6px 10px',
+      borderRadius: 8,
+      fontSize: 12,
+      fontWeight: 700,
+      textTransform: 'uppercase',
+      color: 'white',
+      backgroundColor: colors[badge]
+    }}>
       {badge}
     </span>
   );
-});
+}
 
-const LoadBadge = memo(({ load }) => {
+function LoadBadge({ load }) {
   const percentage = Math.round(load * 100);
-  const color = load >= 0.8 ? 'bg-red-500' : load >= 0.5 ? 'bg-yellow-400' : 'bg-green-500';
+  const color = load >= 0.8 ? '#ef4444' : load >= 0.5 ? '#facc15' : '#22c55e';
   return (
-    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-black/70">
-      <div className={`w-2 h-2 rounded-full ${color}`} />
-      <span className="text-white text-xs font-bold">{percentage}%</span>
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '6px 10px',
+      borderRadius: 9999,
+      backgroundColor: 'rgba(0,0,0,0.7)'
+    }}>
+      <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: color }} />
+      <span style={{ color: 'white', fontSize: 12, fontWeight: 700 }}>{percentage}%</span>
     </div>
   );
-});
+}
 
-const VibeBadge = memo(({ crowd }) => {
+function VibeBadge({ crowd }) {
   const vibe = getVibeFromCrowd(crowd);
   return (
-    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-black/70">
-      <div className={`w-2 h-2 rounded-full ${vibe.bg}`} />
-      <span className="text-xs font-bold" style={{ color: vibe.color }}>{vibe.label}</span>
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '6px 10px',
+      borderRadius: 9999,
+      backgroundColor: 'rgba(0,0,0,0.7)'
+    }}>
+      <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: vibe.bg }} />
+      <span style={{ fontSize: 12, fontWeight: 700, color: vibe.color }}>{vibe.label}</span>
     </div>
   );
-});
+}
 
-const DressCodeBadge = memo(({ code }) => {
+function DressCodeBadge({ code }) {
   const info = getDressCodeInfo(code);
   return (
-    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-black/70">
-      <span className="text-xs">{info.icon}</span>
-      <span className="text-xs font-bold" style={{ color: info.color }}>{info.label}</span>
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '6px 10px',
+      borderRadius: 9999,
+      backgroundColor: 'rgba(0,0,0,0.7)'
+    }}>
+      <span style={{ fontSize: 12 }}>{info.icon}</span>
+      <span style={{ fontSize: 12, fontWeight: 700, color: info.color }}>{info.label}</span>
     </div>
   );
-});
+}
 
-const LiveNowBadge = memo(() => (
-  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-zinc-900/90">
-    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-    <span className="text-white text-xs font-bold">LIVE NOW</span>
-  </div>
-));
+function LiveNowBadge() {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '6px 10px',
+      borderRadius: 9999,
+      backgroundColor: 'rgba(24,24,27,0.9)'
+    }}>
+      <div style={{ 
+        width: 8, 
+        height: 8, 
+        borderRadius: '50%', 
+        backgroundColor: '#22c55e',
+        animation: 'pulse 2s ease-in-out infinite'
+      }} />
+      <span style={{ color: 'white', fontSize: 12, fontWeight: 700 }}>LIVE NOW</span>
+    </div>
+  );
+}
 
-const PriceBadge = memo(({ cover }) => (
-  <div className="px-2.5 py-1.5 rounded-lg bg-zinc-800/90 border border-zinc-700">
-    <span className={`text-xs font-bold ${cover === 0 ? 'text-green-400' : 'text-white'}`}>
-      {cover === 0 ? 'FREE' : `$${cover}`}
-    </span>
-  </div>
-));
+function PriceBadge({ cover }) {
+  return (
+    <div style={{
+      padding: '6px 10px',
+      borderRadius: 8,
+      backgroundColor: 'rgba(39,39,42,0.9)',
+      border: '1px solid #3f3f46'
+    }}>
+      <span style={{ fontSize: 12, fontWeight: 700, color: cover === 0 ? '#4ade80' : 'white' }}>
+        {cover === 0 ? 'FREE' : `$${cover}`}
+      </span>
+    </div>
+  );
+}
 
-const ActionButtons = memo(({ onShare, onFavorite, isFavorited }) => (
-  <div className="flex gap-2">
-    <button 
-      onClick={onShare} 
-      className="w-12 h-12 rounded-full bg-zinc-800/90 flex items-center justify-center active:scale-90 transition-transform border border-zinc-700"
-    >
-      <Send size={18} className="text-white" />
-    </button>
-    <button 
-      onClick={onFavorite} 
-      className={`w-12 h-12 rounded-full bg-zinc-800/90 flex items-center justify-center active:scale-90 transition-all border ${isFavorited ? 'border-pink-500/50' : 'border-zinc-700'}`}
-    >
-      <Heart size={18} className={`transition-all duration-300 ${isFavorited ? 'text-pink-500 fill-pink-500 scale-110' : 'text-white'}`} />
-    </button>
-  </div>
-));
+// ============================================================================
+// ACTION BUTTONS
+// ============================================================================
+
+function ActionButtons({ onShare, onFavorite, isFavorited }) {
+  const handleShare = (e) => {
+    e.stopPropagation();
+    onShare();
+  };
+
+  const handleFavorite = (e) => {
+    e.stopPropagation();
+    onFavorite();
+  };
+
+  return (
+    <div style={{ display: 'flex', gap: 8 }}>
+      <button 
+        onClick={handleShare}
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
+          backgroundColor: 'rgba(39,39,42,0.9)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: '1px solid #3f3f46',
+          cursor: 'pointer'
+        }}
+      >
+        <Send size={18} color="#fff" />
+      </button>
+      <button 
+        onClick={handleFavorite}
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
+          backgroundColor: 'rgba(39,39,42,0.9)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: `1px solid ${isFavorited ? 'rgba(236,72,153,0.5)' : '#3f3f46'}`,
+          cursor: 'pointer'
+        }}
+      >
+        <Heart 
+          size={18} 
+          color={isFavorited ? '#ec4899' : '#fff'}
+          fill={isFavorited ? '#ec4899' : 'none'}
+        />
+      </button>
+    </div>
+  );
+}
 
 // ============================================================================
 // VENUE MODAL
 // ============================================================================
 
-const VenueModal = memo(({ venue, onClose }) => {
+function VenueModal({ venue, onClose }) {
   const [isFavorited, setIsFavorited] = useState(false);
+  
   if (!venue) return null;
 
   const vibe = getVibeFromCrowd(venue.crowd);
   const dressInfo = getDressCodeInfo(venue.dressCode);
 
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
-      <div className="absolute inset-0 bg-black/80" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-zinc-900 rounded-t-3xl p-6 pb-10 animate-slide-up max-h-[90vh] overflow-y-auto">
-        <button onClick={onClose} className="absolute top-4 right-4 w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
-          <X size={22} className="text-white" />
+    <div 
+      onClick={handleBackdropClick}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 50,
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0,0,0,0.8)'
+      }}
+    >
+      <div style={{
+        position: 'relative',
+        width: '100%',
+        maxWidth: 512,
+        backgroundColor: '#18181b',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        padding: 24,
+        paddingBottom: 40,
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        animation: 'slideUp 0.3s ease-out'
+      }}>
+        {/* Close Button */}
+        <button 
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            backgroundColor: '#27272a',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid #3f3f46',
+            cursor: 'pointer',
+            zIndex: 10
+          }}
+        >
+          <X size={22} color="#fff" />
         </button>
         
-        <div className="w-14 h-1.5 bg-zinc-700 rounded-full mx-auto mb-6" />
+        {/* Handle */}
+        <div style={{
+          width: 56,
+          height: 6,
+          backgroundColor: '#3f3f46',
+          borderRadius: 9999,
+          margin: '0 auto 24px'
+        }} />
         
-        <div className="relative h-56 rounded-2xl overflow-hidden mb-5">
-          <img src={venue.image} alt={venue.name} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
+        {/* Image */}
+        <div style={{
+          position: 'relative',
+          height: 224,
+          borderRadius: 16,
+          overflow: 'hidden',
+          marginBottom: 20
+        }}>
+          <img 
+            src={venue.image} 
+            alt={venue.name} 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            onError={(e) => { e.target.style.backgroundColor = '#27272a'; }}
+          />
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent, transparent)'
+          }} />
+          
+          <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <LoadBadge load={venue.crowd} />
             <VibeBadge crowd={venue.crowd} />
           </div>
-          <div className="absolute top-3 right-3">
-            <ActionButtons onShare={() => alert(`Share ${venue.name}`)} onFavorite={() => setIsFavorited(!isFavorited)} isFavorited={isFavorited} />
+          
+          <div style={{ position: 'absolute', top: 12, right: 12 }}>
+            <ActionButtons 
+              onShare={() => alert(`Share ${venue.name}`)} 
+              onFavorite={() => setIsFavorited(!isFavorited)} 
+              isFavorited={isFavorited} 
+            />
           </div>
         </div>
         
-        <div className="flex items-start justify-between mb-3">
-          <h2 className="text-2xl font-bold text-white pr-4">{venue.name}</h2>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: 'white', paddingRight: 16 }}>{venue.name}</h2>
           <PriceBadge cover={venue.cover} />
         </div>
-        <p className="text-zinc-400 text-sm mb-5">{venue.type} • {venue.district}</p>
+        <p style={{ color: '#a1a1aa', fontSize: 14, marginBottom: 20 }}>{venue.type} • {venue.district}</p>
 
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          <div className="p-4 rounded-xl bg-zinc-800 border border-zinc-700">
-            <p className="text-zinc-500 text-xs mb-1">Current Vibe</p>
-            <p className="font-bold text-lg" style={{ color: vibe.color }}>{vibe.label}</p>
+        {/* Vibe & Dress Code */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+          <div style={{ padding: 16, borderRadius: 12, backgroundColor: '#27272a', border: '1px solid #3f3f46' }}>
+            <p style={{ color: '#71717a', fontSize: 12, marginBottom: 4 }}>Current Vibe</p>
+            <p style={{ fontWeight: 700, fontSize: 18, color: vibe.color }}>{vibe.label}</p>
           </div>
-          <div className="p-4 rounded-xl bg-zinc-800 border border-zinc-700">
-            <p className="text-zinc-500 text-xs mb-1">Dress Code</p>
-            <p className="font-bold text-lg flex items-center gap-2" style={{ color: dressInfo.color }}>
+          <div style={{ padding: 16, borderRadius: 12, backgroundColor: '#27272a', border: '1px solid #3f3f46' }}>
+            <p style={{ color: '#71717a', fontSize: 12, marginBottom: 4 }}>Dress Code</p>
+            <p style={{ fontWeight: 700, fontSize: 18, color: dressInfo.color, display: 'flex', alignItems: 'center', gap: 8 }}>
               {dressInfo.icon} {dressInfo.label}
             </p>
           </div>
         </div>
         
+        {/* Happy Hour */}
         {venue.deal && (
-          <div className="bg-zinc-800 rounded-xl p-4 mb-5 border border-zinc-700">
-            <p className="text-yellow-400 font-bold text-sm">🍹 Happy Hour: {venue.deal}</p>
-            <p className="text-zinc-500 text-xs mt-1">Until {venue.dealEnd}</p>
+          <div style={{
+            backgroundColor: '#27272a',
+            borderRadius: 12,
+            padding: 16,
+            marginBottom: 20,
+            border: '1px solid #3f3f46'
+          }}>
+            <p style={{ color: '#facc15', fontWeight: 700, fontSize: 14 }}>🍹 Happy Hour: {venue.deal}</p>
+            <p style={{ color: '#71717a', fontSize: 12, marginTop: 4 }}>Until {venue.dealEnd}</p>
           </div>
         )}
         
-        <p className="text-zinc-400 text-sm flex items-center gap-2 mb-6">
-          <MapPin size={16} className="text-zinc-500" /> {venue.address}
-        </p>
+        {/* Address */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#a1a1aa', fontSize: 14, marginBottom: 24 }}>
+          <MapPin size={16} color="#71717a" />
+          {venue.address}
+        </div>
         
-        <div className="grid grid-cols-2 gap-3">
-          <button className="py-4 rounded-2xl font-bold text-sm text-white active:scale-95 transition-transform flex items-center justify-center gap-2" style={{ backgroundColor: ACCENT }}>
+        {/* Action Buttons */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <button 
+            onClick={() => alert('Checked in!')}
+            style={{
+              padding: 16,
+              borderRadius: 16,
+              fontWeight: 700,
+              fontSize: 14,
+              color: 'white',
+              backgroundColor: ACCENT,
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              cursor: 'pointer'
+            }}
+          >
             <CheckCircle size={20} /> Check In
           </button>
-          <button className="py-4 rounded-2xl font-bold text-sm text-white bg-zinc-800 border border-zinc-700 active:scale-95 transition-transform flex items-center justify-center gap-2">
+          <button 
+            onClick={() => alert('Opening directions...')}
+            style={{
+              padding: 16,
+              borderRadius: 16,
+              fontWeight: 700,
+              fontSize: 14,
+              color: 'white',
+              backgroundColor: '#27272a',
+              border: '1px solid #3f3f46',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              cursor: 'pointer'
+            }}
+          >
             <Navigation size={20} /> Directions
           </button>
         </div>
       </div>
     </div>
   );
-});
+}
 
 // ============================================================================
 // DISCOVER MODE
 // ============================================================================
 
-const DiscoverMode = memo(({ onClose }) => {
+function DiscoverMode({ onClose }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [favorites, setFavorites] = useState({});
 
   const event = EVENTS[currentIndex];
-  const venue = VENUES.find(v => v.id === event.venueId);
+  const venue = event ? VENUES.find(v => v.id === event.venueId) : null;
 
-  const goNext = () => setCurrentIndex(i => Math.min(i + 1, EVENTS.length - 1));
-  const goPrev = () => setCurrentIndex(i => Math.max(i - 1, 0));
-  const toggleFavorite = () => setFavorites(f => ({ ...f, [event.id]: !f[event.id] }));
+  if (!event) return null;
+
+  const goNext = () => {
+    if (currentIndex < EVENTS.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const goPrev = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  const toggleFavorite = () => {
+    setFavorites({ ...favorites, [event.id]: !favorites[event.id] });
+  };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black">
-      <div className="absolute inset-0">
-        <img src={event.image} alt={event.name} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/30" />
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      zIndex: 50,
+      backgroundColor: 'black'
+    }}>
+      {/* Background Image */}
+      <div style={{ position: 'absolute', inset: 0 }}>
+        <img 
+          src={event.image} 
+          alt={event.name} 
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(to top, black, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.3))'
+        }} />
       </div>
 
-      <div className="absolute top-12 left-5 right-5 flex justify-between items-start z-10">
-        <div className="flex flex-col gap-2">
+      {/* Top Info */}
+      <div style={{
+        position: 'absolute',
+        top: 48,
+        left: 20,
+        right: 20,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        zIndex: 10
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {event.isLive && <LiveNowBadge />}
           {venue && <VibeBadge crowd={venue.crowd} />}
           {venue && <DressCodeBadge code={venue.dressCode} />}
         </div>
-        <div className="bg-zinc-900/80 rounded-xl px-4 py-3 text-center border border-zinc-800">
-          <p className="text-zinc-400 text-xs uppercase font-medium">{event.date.split(',')[0] || 'TODAY'}</p>
-          <p className="text-white text-2xl font-bold">{event.time}</p>
+        <div style={{
+          backgroundColor: 'rgba(24,24,27,0.8)',
+          borderRadius: 12,
+          padding: '12px 16px',
+          textAlign: 'center',
+          border: '1px solid #27272a'
+        }}>
+          <p style={{ color: '#a1a1aa', fontSize: 12, textTransform: 'uppercase', fontWeight: 500 }}>
+            {event.date.includes(',') ? event.date.split(',')[0] : 'TODAY'}
+          </p>
+          <p style={{ color: 'white', fontSize: 24, fontWeight: 700 }}>{event.time}</p>
         </div>
       </div>
 
-      <div className="absolute bottom-36 left-5 right-5 z-10">
-        <h1 className="text-4xl font-bold text-white mb-3 leading-tight">{event.name}</h1>
-        <p className="text-lg font-bold mb-1" style={{ color: ACCENT }}>{event.date}, {event.time}</p>
-        <p className="text-zinc-300 text-lg">{event.venue}</p>
+      {/* Bottom Content */}
+      <div style={{
+        position: 'absolute',
+        bottom: 144,
+        left: 20,
+        right: 20,
+        zIndex: 10
+      }}>
+        <h1 style={{ fontSize: 40, fontWeight: 700, color: 'white', marginBottom: 12, lineHeight: 1.1 }}>{event.name}</h1>
+        <p style={{ fontSize: 18, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>{event.date}, {event.time}</p>
+        <p style={{ color: '#d4d4d8', fontSize: 18 }}>{event.venue}</p>
         
-        <div className="flex items-center justify-between mt-6">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 24 }}>
           <PriceBadge cover={event.cover} />
-          <ActionButtons onShare={() => alert(`Share ${event.name}`)} onFavorite={toggleFavorite} isFavorited={favorites[event.id]} />
+          <ActionButtons 
+            onShare={() => alert(`Share ${event.name}`)} 
+            onFavorite={toggleFavorite} 
+            isFavorited={favorites[event.id]} 
+          />
         </div>
       </div>
 
-      <div className="absolute bottom-12 left-0 right-0 flex justify-center items-center gap-4 z-10">
-        <button onClick={goPrev} disabled={currentIndex === 0} className="w-12 h-12 rounded-full bg-zinc-800/80 flex items-center justify-center disabled:opacity-30 border border-zinc-700">
-          <ChevronLeft size={24} className="text-white" />
+      {/* Navigation */}
+      <div style={{
+        position: 'absolute',
+        bottom: 48,
+        left: 0,
+        right: 0,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 16,
+        zIndex: 10
+      }}>
+        <button 
+          onClick={goPrev}
+          disabled={currentIndex === 0}
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(39,39,42,0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid #3f3f46',
+            opacity: currentIndex === 0 ? 0.3 : 1,
+            cursor: currentIndex === 0 ? 'default' : 'pointer'
+          }}
+        >
+          <ChevronLeft size={24} color="#fff" />
         </button>
-        <button onClick={onClose} className="w-14 h-14 rounded-full bg-white flex items-center justify-center">
-          <X size={26} className="text-black" />
+        <button 
+          onClick={onClose}
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: '50%',
+            backgroundColor: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          <X size={26} color="#000" />
         </button>
-        <button onClick={goNext} disabled={currentIndex === EVENTS.length - 1} className="w-12 h-12 rounded-full bg-zinc-800/80 flex items-center justify-center disabled:opacity-30 border border-zinc-700">
-          <ChevronRightIcon size={24} className="text-white" />
+        <button 
+          onClick={goNext}
+          disabled={currentIndex === EVENTS.length - 1}
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(39,39,42,0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid #3f3f46',
+            opacity: currentIndex === EVENTS.length - 1 ? 0.3 : 1,
+            cursor: currentIndex === EVENTS.length - 1 ? 'default' : 'pointer'
+          }}
+        >
+          <ChevronRightIcon size={24} color="#fff" />
         </button>
       </div>
 
-      <div className="absolute bottom-28 left-0 right-0 flex justify-center gap-2 z-10">
+      {/* Progress Dots */}
+      <div style={{
+        position: 'absolute',
+        bottom: 112,
+        left: 0,
+        right: 0,
+        display: 'flex',
+        justifyContent: 'center',
+        gap: 8,
+        zIndex: 10
+      }}>
         {EVENTS.map((_, i) => (
           <div 
-            key={i} 
-            className={`h-2 rounded-full transition-all duration-300 ${i === currentIndex ? 'w-8' : 'w-2'}`}
-            style={{ backgroundColor: i === currentIndex ? ACCENT : '#52525b' }}
+            key={i}
+            style={{
+              height: 8,
+              borderRadius: 9999,
+              backgroundColor: i === currentIndex ? ACCENT : '#52525b',
+              width: i === currentIndex ? 32 : 8,
+              transition: 'all 0.3s ease'
+            }}
           />
         ))}
       </div>
     </div>
   );
-});
+}
 
 // ============================================================================
 // HOME TAB
 // ============================================================================
 
-const HomeTab = ({ onVenueSelect }) => {
+function HomeTab({ onVenueSelect }) {
   const happyHourVenues = VENUES.filter(v => v.deal);
   const trendingVenues = VENUES.filter(v => v.crowd >= 0.5);
 
   return (
-    <div className="h-full overflow-y-auto pb-28 bg-zinc-950">
-      <header className="px-5 pt-12 pb-6 flex justify-between items-start">
+    <div style={{
+      height: '100%',
+      overflowY: 'auto',
+      paddingBottom: 112,
+      backgroundColor: '#09090b'
+    }}>
+      {/* Header */}
+      <header style={{
+        padding: '48px 20px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start'
+      }}>
         <div>
-          <h1 className="text-3xl font-bold">
-            <span className="text-white">Krowd</span>
+          <h1 style={{ fontSize: 30, fontWeight: 700 }}>
+            <span style={{ color: 'white' }}>Krowd</span>
             <span style={{ color: ACCENT }}>Guide</span>
           </h1>
-          <p className="text-zinc-400 text-xs tracking-widest mt-1">KNOW BEFORE YOU GO</p>
+          <p style={{ color: '#a1a1aa', fontSize: 12, letterSpacing: '0.1em', marginTop: 4 }}>KNOW BEFORE YOU GO</p>
         </div>
-        <Avatar />
+        <div style={{
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
+          overflow: 'hidden',
+          border: '2px solid #22c55e'
+        }}>
+          <img 
+            src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80" 
+            alt="Profile" 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        </div>
       </header>
 
-      <section className="px-5 mb-8">
-        <div className="flex items-center gap-4 p-5 rounded-2xl bg-zinc-900 border border-zinc-800">
-          <div className="w-14 h-14 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
-            <Sparkles size={28} className="text-indigo-400" />
+      {/* Krowd Intelligence */}
+      <section style={{ padding: '0 20px', marginBottom: 32 }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 16,
+          padding: 20,
+          borderRadius: 16,
+          backgroundColor: '#18181b',
+          border: '1px solid #27272a'
+        }}>
+          <div style={{
+            width: 56,
+            height: 56,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(99,102,241,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <Sparkles size={28} color="#818cf8" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold tracking-wider mb-1" style={{ color: ACCENT }}>KROWD INTELLIGENCE</p>
-            <p className="text-white text-sm">Deep Ellum is spiking. 3 venues just hit capacity...</p>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.05em', color: ACCENT, marginBottom: 4 }}>KROWD INTELLIGENCE</p>
+            <p style={{ color: 'white', fontSize: 14 }}>Deep Ellum is spiking. 3 venues just hit capacity...</p>
           </div>
         </div>
       </section>
 
-      <section className="mb-8">
-        <div className="flex items-center justify-between px-5 mb-4">
-          <div className="flex items-center gap-2">
-            <Clock size={20} className="text-yellow-400" />
-            <h2 className="text-lg font-bold text-yellow-400">Happy Hours Active</h2>
+      {/* Happy Hours */}
+      <section style={{ marginBottom: 32 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Clock size={20} color="#facc15" />
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#facc15' }}>Happy Hours Active</h2>
           </div>
-          <button className="text-zinc-400 text-sm">View all</button>
+          <button style={{ color: '#a1a1aa', fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>View all</button>
         </div>
-        <div className="flex gap-4 overflow-x-auto px-5 pb-3 scrollbar-hide">
+        <div style={{
+          display: 'flex',
+          gap: 16,
+          overflowX: 'auto',
+          padding: '0 20px 12px',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}>
           {happyHourVenues.map(venue => (
-            <button key={venue.id} onClick={() => onVenueSelect(venue)} className="shrink-0 w-44 text-left active:scale-95 transition-transform">
-              <div className="relative h-36 rounded-2xl overflow-hidden mb-3">
-                <img src={venue.image} alt={venue.name} loading="lazy" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <button 
+              key={venue.id} 
+              onClick={() => onVenueSelect(venue)} 
+              style={{
+                flexShrink: 0,
+                width: 176,
+                textAlign: 'left',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0
+              }}
+            >
+              <div style={{
+                position: 'relative',
+                height: 144,
+                borderRadius: 16,
+                overflow: 'hidden',
+                marginBottom: 12
+              }}>
+                <img src={venue.image} alt={venue.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)' }} />
                 <VenueBadge badge={venue.badge} />
-                <div className="absolute bottom-3 right-3 px-2.5 py-1.5 rounded-lg text-xs font-bold text-white" style={{ backgroundColor: ACCENT }}>
+                <div style={{
+                  position: 'absolute',
+                  bottom: 12,
+                  right: 12,
+                  padding: '6px 10px',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: 'white',
+                  backgroundColor: ACCENT
+                }}>
                   Until {venue.dealEnd}
                 </div>
               </div>
-              <h3 className="text-white font-bold text-sm">{venue.name}</h3>
-              <p className="text-zinc-400 text-xs mt-0.5">{venue.deal}</p>
+              <h3 style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>{venue.name}</h3>
+              <p style={{ color: '#a1a1aa', fontSize: 12, marginTop: 2 }}>{venue.deal}</p>
             </button>
           ))}
         </div>
       </section>
 
-      <section className="mb-8">
-        <div className="flex items-center justify-between px-5 mb-4">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-white">Trending</h2>
-            <Flame size={22} className="text-orange-500" />
+      {/* Trending */}
+      <section style={{ marginBottom: 32 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>Trending</h2>
+            <Flame size={22} color="#f97316" />
           </div>
-          <button className="text-zinc-400 text-sm">View all</button>
+          <button style={{ color: '#a1a1aa', fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>View all</button>
         </div>
-        <div className="flex gap-4 overflow-x-auto px-5 pb-3 scrollbar-hide">
+        <div style={{
+          display: 'flex',
+          gap: 16,
+          overflowX: 'auto',
+          padding: '0 20px 12px',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}>
           {trendingVenues.map(venue => (
-            <button key={venue.id} onClick={() => onVenueSelect(venue)} className="shrink-0 w-64 text-left active:scale-95 transition-transform">
-              <div className="relative h-48 rounded-2xl overflow-hidden mb-3">
-                <img src={venue.image} alt={venue.name} loading="lazy" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <button 
+              key={venue.id} 
+              onClick={() => onVenueSelect(venue)} 
+              style={{
+                flexShrink: 0,
+                width: 256,
+                textAlign: 'left',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0
+              }}
+            >
+              <div style={{
+                position: 'relative',
+                height: 192,
+                borderRadius: 16,
+                overflow: 'hidden',
+                marginBottom: 12
+              }}>
+                <img src={venue.image} alt={venue.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0.2), transparent)' }} />
                 <VenueBadge badge={venue.badge} />
-                <div className="absolute top-3 right-3">
+                <div style={{ position: 'absolute', top: 12, right: 12 }}>
                   <LoadBadge load={venue.crowd} />
                 </div>
-                <div className="absolute bottom-3 left-3 flex flex-col gap-1.5">
+                <div style={{ position: 'absolute', bottom: 12, left: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <VibeBadge crowd={venue.crowd} />
                   <DressCodeBadge code={venue.dressCode} />
                 </div>
-                <div className="absolute bottom-3 right-3">
+                <div style={{ position: 'absolute', bottom: 12, right: 12 }}>
                   <PriceBadge cover={venue.cover} />
                 </div>
               </div>
-              <h3 className="text-white font-bold text-lg">{venue.name}</h3>
-              <div className="flex items-center gap-2 text-zinc-400 text-xs mt-1">
+              <h3 style={{ color: 'white', fontWeight: 700, fontSize: 18 }}>{venue.name}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#a1a1aa', fontSize: 12, marginTop: 4 }}>
                 <MapPin size={12} />
                 <span>{venue.distance}</span>
-                <span className="text-zinc-600">•</span>
+                <span style={{ color: '#52525b' }}>•</span>
                 <span>{venue.type}</span>
               </div>
             </button>
@@ -620,23 +1289,41 @@ const HomeTab = ({ onVenueSelect }) => {
         </div>
       </section>
 
-      <section className="px-5">
-        <div className="grid grid-cols-2 gap-3">
+      {/* Categories */}
+      <section style={{ padding: '0 20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {CATEGORIES.map(cat => {
             const Icon = cat.icon;
             return (
               <button 
                 key={cat.name} 
                 onClick={() => alert(`Browse ${cat.name}`)} 
-                className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900 border border-zinc-800 active:scale-95 transition-all"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: 16,
+                  borderRadius: 16,
+                  backgroundColor: '#18181b',
+                  border: '1px solid #27272a',
+                  cursor: 'pointer'
+                }}
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center">
-                    <Icon size={20} className="text-zinc-400" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 12,
+                    backgroundColor: '#27272a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Icon size={20} color="#a1a1aa" />
                   </div>
-                  <span className="text-white font-medium">{cat.name}</span>
+                  <span style={{ color: 'white', fontWeight: 500 }}>{cat.name}</span>
                 </div>
-                <ArrowUpRight size={18} className="text-zinc-500" />
+                <ArrowUpRight size={18} color="#71717a" />
               </button>
             );
           })}
@@ -644,16 +1331,22 @@ const HomeTab = ({ onVenueSelect }) => {
       </section>
     </div>
   );
-};
+}
 
 // ============================================================================
 // MAP TAB
 // ============================================================================
 
-const MapTab = ({ onDistrictSelect }) => {
+function MapTab({ onDistrictSelect }) {
   return (
-    <div className="h-full relative overflow-hidden bg-zinc-950">
-      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+    <div style={{
+      height: '100%',
+      position: 'relative',
+      overflow: 'hidden',
+      backgroundColor: '#09090b'
+    }}>
+      {/* Background SVG */}
+      <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 100 100" preserveAspectRatio="none">
         <defs>
           <radialGradient id="mapGlow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#1a4a3a" stopOpacity="0.8" />
@@ -672,107 +1365,299 @@ const MapTab = ({ onDistrictSelect }) => {
         <path d="M 18 38 Q 30 50, 50 75" stroke="#3f3f46" strokeWidth="0.4" fill="none" opacity="0.7" />
       </svg>
 
-      <header className="absolute top-12 left-5 right-5 flex justify-between items-center z-10">
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-black/70 border border-zinc-800">
-          <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-white text-sm font-bold">LIVE NET</span>
+      {/* Header */}
+      <header style={{
+        position: 'absolute',
+        top: 48,
+        left: 20,
+        right: 20,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 10
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '10px 16px',
+          borderRadius: 9999,
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          border: '1px solid #27272a'
+        }}>
+          <div style={{
+            width: 10,
+            height: 10,
+            borderRadius: '50%',
+            backgroundColor: '#22c55e',
+            animation: 'pulse 2s ease-in-out infinite'
+          }} />
+          <span style={{ color: 'white', fontSize: 14, fontWeight: 700 }}>LIVE NET</span>
         </div>
-        <button className="w-12 h-12 rounded-full bg-black/70 flex items-center justify-center border border-zinc-800">
-          <MapPin size={22} className="text-white" />
+        <button style={{
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: '1px solid #27272a',
+          cursor: 'pointer'
+        }}>
+          <MapPin size={22} color="#fff" />
         </button>
       </header>
 
+      {/* Districts */}
       {DISTRICTS.map(district => (
         <button 
           key={district.id} 
           onClick={() => onDistrictSelect(district)} 
-          className="absolute flex flex-col items-center active:scale-110 transition-transform"
-          style={{ left: `${district.x}%`, top: `${district.y}%`, transform: 'translate(-50%, -50%)' }}
+          style={{
+            position: 'absolute',
+            left: `${district.x}%`,
+            top: `${district.y}%`,
+            transform: 'translate(-50%, -50%)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0
+          }}
         >
-          <div 
-            className="w-16 h-16 rounded-full flex flex-col items-center justify-center mb-2 border-2"
-            style={{ backgroundColor: `${district.color}15`, borderColor: `${district.color}50` }}
-          >
-            <span className="text-xl font-bold" style={{ color: district.color }}>{district.venues}</span>
-            <span className="text-[10px] font-medium text-zinc-400">VENUES</span>
+          <div style={{
+            width: 64,
+            height: 64,
+            borderRadius: '50%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 8,
+            backgroundColor: `${district.color}15`,
+            border: `2px solid ${district.color}50`
+          }}>
+            <span style={{ fontSize: 20, fontWeight: 700, color: district.color }}>{district.venues}</span>
+            <span style={{ fontSize: 10, fontWeight: 500, color: '#a1a1aa' }}>VENUES</span>
           </div>
-          <span className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-black/80 border border-zinc-800" style={{ color: district.color }}>
+          <span style={{
+            fontSize: 10,
+            fontWeight: 700,
+            padding: '6px 10px',
+            borderRadius: 8,
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            border: '1px solid #27272a',
+            color: district.color
+          }}>
             {district.name}
           </span>
         </button>
       ))}
     </div>
   );
-};
+}
 
 // ============================================================================
 // EVENTS TAB
 // ============================================================================
 
-const EventsTab = ({ onEventSelect, onDiscoverOpen }) => {
+function EventsTab({ onEventSelect, onDiscoverOpen }) {
   const [favorites, setFavorites] = useState({});
 
+  const handleFavorite = (e, eventId) => {
+    e.stopPropagation();
+    setFavorites({ ...favorites, [eventId]: !favorites[eventId] });
+  };
+
   return (
-    <div className="h-full overflow-y-auto pb-28 pt-12 px-5 bg-zinc-950">
-      <div className="flex items-center justify-between mb-6 pb-2">
-        <h1 className="text-3xl font-bold text-white">Tonight's Events</h1>
-        <button onClick={onDiscoverOpen} className="px-5 py-3 rounded-full font-bold text-sm text-white active:scale-95 transition-transform" style={{ backgroundColor: ACCENT }}>
+    <div style={{
+      height: '100%',
+      overflowY: 'auto',
+      paddingBottom: 112,
+      paddingTop: 48,
+      padding: '48px 20px 112px',
+      backgroundColor: '#09090b'
+    }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, paddingBottom: 8 }}>
+        <h1 style={{ fontSize: 30, fontWeight: 700, color: 'white' }}>Tonight's Events</h1>
+        <button 
+          onClick={onDiscoverOpen}
+          style={{
+            padding: '12px 20px',
+            borderRadius: 9999,
+            fontWeight: 700,
+            fontSize: 14,
+            color: 'white',
+            backgroundColor: ACCENT,
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
           Discover
         </button>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-6 mb-4 scrollbar-hide">
-        <div className="flex flex-col items-center gap-2 shrink-0">
-          <button className="w-16 h-16 rounded-full border-2 border-dashed border-zinc-600 flex items-center justify-center bg-zinc-900">
-            <Plus size={24} className="text-zinc-500" />
+      {/* Performers */}
+      <div style={{
+        display: 'flex',
+        gap: 16,
+        overflowX: 'auto',
+        paddingBottom: 24,
+        marginBottom: 16,
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none'
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <button style={{
+            width: 64,
+            height: 64,
+            borderRadius: '50%',
+            border: '2px dashed #52525b',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#18181b',
+            cursor: 'pointer'
+          }}>
+            <Plus size={24} color="#71717a" />
           </button>
-          <span className="text-xs text-zinc-500">Add</span>
+          <span style={{ fontSize: 12, color: '#71717a' }}>Add</span>
         </div>
         {PERFORMERS.map(performer => (
-          <button key={performer.id} className="flex flex-col items-center gap-2 shrink-0" onClick={() => alert(`${performer.name} at ${performer.venue}`)}>
-            <div className="relative">
-              <div className="w-16 h-16 rounded-full p-0.5" style={{ background: performer.isLive ? `linear-gradient(135deg, ${ACCENT}, #a855f7)` : 'linear-gradient(135deg, #3f3f46, #27272a)' }}>
-                <img src={performer.image} alt={performer.name} className="w-full h-full rounded-full object-cover" />
+          <button 
+            key={performer.id} 
+            onClick={() => alert(`${performer.name} at ${performer.venue}`)}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 8,
+              flexShrink: 0,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0
+            }}
+          >
+            <div style={{ position: 'relative' }}>
+              <div style={{
+                width: 64,
+                height: 64,
+                borderRadius: '50%',
+                padding: 2,
+                background: performer.isLive 
+                  ? `linear-gradient(135deg, ${ACCENT}, #a855f7)` 
+                  : 'linear-gradient(135deg, #3f3f46, #27272a)'
+              }}>
+                <img 
+                  src={performer.image} 
+                  alt={performer.name} 
+                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                />
               </div>
-              {performer.isLive && <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-zinc-950" />}
+              {performer.isLive && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  width: 16,
+                  height: 16,
+                  backgroundColor: '#22c55e',
+                  borderRadius: '50%',
+                  border: '2px solid #09090b'
+                }} />
+              )}
             </div>
-            <span className="text-xs text-zinc-400 max-w-16 truncate">{performer.name}</span>
+            <span style={{ fontSize: 12, color: '#a1a1aa', maxWidth: 64, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {performer.name}
+            </span>
           </button>
         ))}
       </div>
       
-      <div className="space-y-4">
+      {/* Events List */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {EVENTS.map(event => {
           const venue = VENUES.find(v => v.id === event.venueId);
           return (
-            <button key={event.id} onClick={() => onEventSelect(event)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-zinc-900 text-left active:scale-[0.98] transition-transform border border-zinc-800">
-              <div className="w-20 h-20 rounded-xl bg-zinc-950 flex flex-col items-center justify-center shrink-0 relative overflow-hidden">
-                <img src={event.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-25" />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/60" />
-                <span className="text-zinc-300 text-xs font-bold relative">TODAY</span>
-                <span className="text-white text-2xl font-bold relative">{event.time}</span>
+            <button 
+              key={event.id} 
+              onClick={() => onEventSelect(event)} 
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+                padding: 16,
+                borderRadius: 16,
+                backgroundColor: '#18181b',
+                textAlign: 'left',
+                border: '1px solid #27272a',
+                cursor: 'pointer'
+              }}
+            >
+              {/* Time Card */}
+              <div style={{
+                width: 80,
+                height: 80,
+                borderRadius: 12,
+                backgroundColor: '#09090b',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <img src={event.image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.25 }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.6))' }} />
+                <span style={{ color: '#d4d4d8', fontSize: 12, fontWeight: 700, position: 'relative' }}>TODAY</span>
+                <span style={{ color: 'white', fontSize: 24, fontWeight: 700, position: 'relative' }}>{event.time}</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              
+              {/* Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
                   {event.isLive && <LiveNowBadge />}
                   {venue && <VibeBadge crowd={venue.crowd} />}
                 </div>
-                <h3 className="text-white font-bold text-lg truncate">{event.name}</h3>
-                <p className="font-bold truncate" style={{ color: ACCENT }}>{event.venue}</p>
-                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                  <span className="text-zinc-400 text-sm">{event.district}</span>
+                <h3 style={{ color: 'white', fontWeight: 700, fontSize: 18, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{event.name}</h3>
+                <p style={{ color: ACCENT, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{event.venue}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+                  <span style={{ color: '#a1a1aa', fontSize: 14 }}>{event.district}</span>
                   {venue && <DressCodeBadge code={venue.dressCode} />}
                   <PriceBadge cover={event.cover} />
                 </div>
               </div>
-              <div className="flex flex-col items-center gap-3">
+              
+              {/* Actions */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                 <button 
-                  onClick={(e) => { e.stopPropagation(); setFavorites(f => ({ ...f, [event.id]: !f[event.id] })); }} 
-                  className={`w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center border ${favorites[event.id] ? 'border-pink-500/50' : 'border-zinc-700'}`}
+                  onClick={(e) => handleFavorite(e, event.id)}
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    backgroundColor: '#27272a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: `1px solid ${favorites[event.id] ? 'rgba(236,72,153,0.5)' : '#3f3f46'}`,
+                    cursor: 'pointer'
+                  }}
                 >
-                  <Heart size={20} className={`transition-all duration-300 ${favorites[event.id] ? 'text-pink-500 fill-pink-500' : 'text-zinc-400'}`} />
+                  <Heart 
+                    size={20} 
+                    color={favorites[event.id] ? '#ec4899' : '#a1a1aa'}
+                    fill={favorites[event.id] ? '#ec4899' : 'none'}
+                  />
                 </button>
-                <ChevronRight size={22} className="text-zinc-600" />
+                <ChevronRight size={22} color="#52525b" />
               </div>
             </button>
           );
@@ -780,98 +1665,170 @@ const EventsTab = ({ onEventSelect, onDiscoverOpen }) => {
       </div>
     </div>
   );
-};
+}
 
 // ============================================================================
 // PROFILE TAB
 // ============================================================================
 
-const ProfileTab = ({ onVenueSelect }) => {
+function ProfileTab({ onVenueSelect }) {
   const stats = [
-    { label: 'Check-ins', value: 47, icon: CheckCircle },
-    { label: 'Reviews', value: 12, icon: Star },
-    { label: 'Friends', value: 89, icon: Users },
+    { label: 'Check-ins', value: 47, Icon: CheckCircle },
+    { label: 'Reviews', value: 12, Icon: Star },
+    { label: 'Friends', value: 89, Icon: Users },
   ];
 
   return (
-    <div className="h-full overflow-y-auto pb-28 pt-12 px-5 bg-zinc-950 relative">
-      <div className="absolute top-0 left-0 right-0 h-72 bg-gradient-to-b from-zinc-900/60 to-transparent pointer-events-none" />
+    <div style={{
+      height: '100%',
+      overflowY: 'auto',
+      paddingBottom: 112,
+      paddingTop: 48,
+      padding: '48px 20px 112px',
+      backgroundColor: '#09090b',
+      position: 'relative'
+    }}>
+      {/* Gradient Background */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 288,
+        background: 'linear-gradient(to bottom, rgba(24,24,27,0.6), transparent)',
+        pointerEvents: 'none'
+      }} />
       
-      <div className="flex flex-col items-center mb-8 relative">
-        <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-green-500 mb-4">
-          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80" alt="Profile" className="w-full h-full object-cover" />
+      {/* Profile Header */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32, position: 'relative' }}>
+        <div style={{
+          width: 112,
+          height: 112,
+          borderRadius: '50%',
+          overflow: 'hidden',
+          border: '4px solid #22c55e',
+          marginBottom: 16
+        }}>
+          <img 
+            src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80" 
+            alt="Profile" 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
         </div>
-        <h1 className="text-2xl font-bold text-white">Alex Thompson</h1>
-        <p className="text-zinc-400 mt-1">@alexthompson</p>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: 'white' }}>Alex Thompson</h1>
+        <p style={{ color: '#a1a1aa', marginTop: 4 }}>@alexthompson</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 mb-8 relative">
-        {stats.map(stat => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.label} className="text-center p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
-              <Icon size={22} className="mx-auto mb-2 text-zinc-500" />
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
-              <p className="text-zinc-400 text-xs mt-1">{stat.label}</p>
-            </div>
-          );
-        })}
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 32, position: 'relative' }}>
+        {stats.map(stat => (
+          <div key={stat.label} style={{
+            textAlign: 'center',
+            padding: 16,
+            borderRadius: 16,
+            backgroundColor: '#18181b',
+            border: '1px solid #27272a'
+          }}>
+            <stat.Icon size={22} color="#71717a" style={{ margin: '0 auto 8px' }} />
+            <p style={{ fontSize: 24, fontWeight: 700, color: 'white' }}>{stat.value}</p>
+            <p style={{ color: '#a1a1aa', fontSize: 12, marginTop: 4 }}>{stat.label}</p>
+          </div>
+        ))}
       </div>
 
-      <h2 className="text-lg font-bold text-white mb-4 relative">Favorite Spots</h2>
-      <div className="space-y-3 relative">
+      {/* Favorites */}
+      <h2 style={{ fontSize: 18, fontWeight: 700, color: 'white', marginBottom: 16, position: 'relative' }}>Favorite Spots</h2>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'relative' }}>
         {VENUES.slice(0, 3).map(venue => (
-          <button key={venue.id} onClick={() => onVenueSelect(venue)} className="w-full flex items-center gap-4 p-4 rounded-xl bg-zinc-900 text-left active:scale-[0.98] transition-transform border border-zinc-800">
-            <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0">
-              <img src={venue.image} alt={venue.name} className="w-full h-full object-cover" />
+          <button 
+            key={venue.id} 
+            onClick={() => onVenueSelect(venue)} 
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 16,
+              padding: 16,
+              borderRadius: 12,
+              backgroundColor: '#18181b',
+              textAlign: 'left',
+              border: '1px solid #27272a',
+              cursor: 'pointer'
+            }}
+          >
+            <div style={{ width: 64, height: 64, borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
+              <img src={venue.image} alt={venue.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-white font-bold truncate mb-1">{venue.name}</h3>
-              <div className="flex items-center gap-2 flex-wrap">
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h3 style={{ color: 'white', fontWeight: 700, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{venue.name}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <VibeBadge crowd={venue.crowd} />
                 <DressCodeBadge code={venue.dressCode} />
               </div>
-              <p className="text-zinc-500 text-xs mt-1.5 flex items-center gap-1">
+              <p style={{ color: '#71717a', fontSize: 12, marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <MapPin size={10} /> {venue.distance} away
               </p>
             </div>
-            <ChevronRight size={20} className="text-zinc-600 shrink-0" />
+            <ChevronRight size={20} color="#52525b" />
           </button>
         ))}
       </div>
     </div>
   );
-};
+}
 
 // ============================================================================
 // BOTTOM NAV
 // ============================================================================
 
-const BottomNav = memo(({ activeTab, setActiveTab }) => {
+const BottomNav = memo(function BottomNav({ activeTab, setActiveTab }) {
   const tabs = [
-    { id: 'home', icon: Home, label: 'Home' },
-    { id: 'map', icon: MapIcon, label: 'Map' },
-    { id: 'events', icon: Calendar, label: 'Events' },
-    { id: 'profile', icon: User, label: 'Profile' },
+    { id: 'home', Icon: Home, label: 'Home' },
+    { id: 'map', Icon: MapIcon, label: 'Map' },
+    { id: 'events', Icon: Calendar, label: 'Events' },
+    { id: 'profile', Icon: User, label: 'Profile' },
   ];
 
   return (
-    <nav className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-xs px-5">
-      <div className="rounded-full p-2 flex justify-around bg-zinc-900/95 border border-zinc-800">
-        {tabs.map(tab => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button 
-              key={tab.id} 
-              onClick={() => setActiveTab(tab.id)} 
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-90 ${isActive ? 'text-white' : 'text-zinc-400'}`}
-              style={{ backgroundColor: isActive ? ACCENT : 'transparent' }}
-            >
-              <Icon size={24} />
-            </button>
-          );
-        })}
+    <nav style={{
+      position: 'absolute',
+      bottom: 24,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 40,
+      width: '100%',
+      maxWidth: 320,
+      padding: '0 20px'
+    }}>
+      <div style={{
+        borderRadius: 9999,
+        padding: 8,
+        display: 'flex',
+        justifyContent: 'space-around',
+        backgroundColor: 'rgba(24,24,27,0.95)',
+        border: '1px solid #27272a'
+      }}>
+        {tabs.map(tab => (
+          <button 
+            key={tab.id} 
+            onClick={() => setActiveTab(tab.id)} 
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: activeTab === tab.id ? ACCENT : 'transparent',
+              color: activeTab === tab.id ? 'white' : '#a1a1aa',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <tab.Icon size={24} />
+          </button>
+        ))}
       </div>
     </nav>
   );
@@ -887,49 +1844,81 @@ export default function App() {
   const [selectedVenue, setSelectedVenue] = useState(null);
   const [discoverOpen, setDiscoverOpen] = useState(false);
 
-  const handleSplashComplete = useCallback(() => setAppPhase('location'), []);
+  const handleSplashComplete = useCallback(() => {
+    setAppPhase('location');
+  }, []);
   
-  // Fixed: onContinue always moves to ready state
   const handleLocationContinue = useCallback(() => {
-    console.log('[App] Continuing to main app');
     setAppPhase('ready');
   }, []);
 
-  const handleVenueSelect = useCallback((venue) => setSelectedVenue(venue), []);
-  const handleVenueClose = useCallback(() => setSelectedVenue(null), []);
-  const handleDistrictSelect = useCallback((district) => alert(`${district.name}\n${district.venues} venues available`), []);
+  const handleVenueSelect = useCallback((venue) => {
+    setSelectedVenue(venue);
+  }, []);
+
+  const handleVenueClose = useCallback(() => {
+    setSelectedVenue(null);
+  }, []);
+
+  const handleDistrictSelect = useCallback((district) => {
+    alert(`${district.name}\n${district.venues} venues available`);
+  }, []);
+
   const handleEventSelect = useCallback((event) => {
     const venue = VENUES.find(v => v.id === event.venueId);
-    if (venue) setSelectedVenue(venue);
+    if (venue) {
+      setSelectedVenue(venue);
+    }
+  }, []);
+
+  const handleDiscoverOpen = useCallback(() => {
+    setDiscoverOpen(true);
+  }, []);
+
+  const handleDiscoverClose = useCallback(() => {
+    setDiscoverOpen(false);
   }, []);
 
   return (
-    <div className="h-screen w-screen overflow-hidden relative bg-zinc-950">
-      <style>{`
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .animate-slide-up { animation: slide-up 0.3s ease-out; }
-        @keyframes dot-pulse { 
-          0%, 100% { opacity: 0.3; transform: scale(0.9); background-color: #52525b; } 
-          50% { opacity: 1; transform: scale(1.1); background-color: #FF2E63; } 
-        }
-        .animate-dot-pulse { animation: dot-pulse 1.4s ease-in-out infinite; }
-      `}</style>
+    <div style={{
+      height: '100vh',
+      width: '100vw',
+      overflow: 'hidden',
+      position: 'relative',
+      backgroundColor: '#09090b',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      {/* Global Styles */}
+      <style>{GLOBAL_STYLES}</style>
 
-      {appPhase === 'splash' && <SplashScreen onComplete={handleSplashComplete} />}
-      {appPhase === 'location' && <LocationScreen onContinue={handleLocationContinue} />}
+      {/* Splash Screen */}
+      {appPhase === 'splash' && (
+        <SplashScreen onComplete={handleSplashComplete} />
+      )}
 
+      {/* Location Screen */}
+      {appPhase === 'location' && (
+        <LocationScreen onContinue={handleLocationContinue} />
+      )}
+
+      {/* Main App */}
       {appPhase === 'ready' && (
         <>
-          <main className="h-full">
+          <main style={{ height: '100%' }}>
             {activeTab === 'home' && <HomeTab onVenueSelect={handleVenueSelect} />}
             {activeTab === 'map' && <MapTab onDistrictSelect={handleDistrictSelect} />}
-            {activeTab === 'events' && <EventsTab onEventSelect={handleEventSelect} onDiscoverOpen={() => setDiscoverOpen(true)} />}
+            {activeTab === 'events' && <EventsTab onEventSelect={handleEventSelect} onDiscoverOpen={handleDiscoverOpen} />}
             {activeTab === 'profile' && <ProfileTab onVenueSelect={handleVenueSelect} />}
           </main>
-          {selectedVenue && <VenueModal venue={selectedVenue} onClose={handleVenueClose} />}
-          {discoverOpen && <DiscoverMode onClose={() => setDiscoverOpen(false)} />}
+
+          {selectedVenue && (
+            <VenueModal venue={selectedVenue} onClose={handleVenueClose} />
+          )}
+
+          {discoverOpen && (
+            <DiscoverMode onClose={handleDiscoverClose} />
+          )}
+
           <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
         </>
       )}
