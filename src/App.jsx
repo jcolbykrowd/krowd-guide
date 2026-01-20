@@ -2,7 +2,7 @@ import React, { useState, useEffect, memo, useCallback } from 'react';
 import { 
   Home, Map as MapIcon, Calendar, User, MapPin, ArrowUpRight,
   Sparkles, Flame, Clock, ChevronRight, X, Heart, Send, Lock,
-  ChevronLeft, ChevronRight as ChevronRightIcon, Plus, AlertCircle
+  ChevronLeft, ChevronRight as ChevronRightIcon, Plus, AlertCircle, Shirt
 } from 'lucide-react';
 
 // ============================================================================
@@ -14,11 +14,11 @@ const ACCENT = '#FF2E63';
 
 // TODO: GET /api/venues
 const VENUES = [
-  { id: 'v1', name: 'Happiest Hour', type: 'ROOFTOP LOUNGE', district: 'Victory Park', image: 'https://images.unsplash.com/photo-1566417713940-fe7c737a9ef2?w=800&q=80', crowd: 0.9, safety: 'high', distance: '0.3m', deal: '$5 Margaritas', dealEnd: '7pm', address: '2616 Olive St, Dallas, TX', cover: 0, badge: 'free' },
-  { id: 'v2', name: 'The Rustic', type: 'LIVE MUSIC VENUE', district: 'Uptown', image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80', crowd: 0.7, safety: 'high', distance: '0.8m', deal: '1/2 Price Wine', dealEnd: '6pm', address: '3656 Howell St, Dallas, TX', cover: 10, badge: null },
-  { id: 'v3', name: 'Stirr', type: 'SPORTS BAR', district: 'Deep Ellum', image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80', crowd: 0.8, safety: 'moderate', distance: '0.5m', deal: '$4 Draft Beers', dealEnd: '8pm', address: '2803 Main St, Dallas, TX', cover: 0, badge: 'hot' },
-  { id: 'v4', name: 'Bottled Blonde', type: 'CLUB', district: 'Deep Ellum', image: 'https://images.unsplash.com/photo-1574096079513-d82599602959?w=800&q=80', crowd: 0.95, safety: 'moderate', distance: '0.6m', deal: null, dealEnd: null, address: '2505 Pacific Ave, Dallas, TX', cover: 20, badge: 'hot' },
-  { id: 'v5', name: 'Katy Trail Ice House', type: 'BEER GARDEN', district: 'Uptown', image: 'https://images.unsplash.com/photo-1582234031666-41f237f37299?w=800&q=80', crowd: 0.4, safety: 'high', distance: '1.2m', deal: '$3 Tacos', dealEnd: '7pm', address: '3127 Routh St, Dallas, TX', cover: 0, badge: 'new' },
+  { id: 'v1', name: 'Happiest Hour', type: 'ROOFTOP LOUNGE', district: 'Victory Park', image: 'https://images.unsplash.com/photo-1566417713940-fe7c737a9ef2?w=800&q=80', crowd: 0.9, distance: '0.3m', deal: '$5 Margaritas', dealEnd: '7pm', address: '2616 Olive St, Dallas, TX', cover: 0, badge: 'free', dressCode: 'smart' },
+  { id: 'v2', name: 'The Rustic', type: 'LIVE MUSIC VENUE', district: 'Uptown', image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80', crowd: 0.55, distance: '0.8m', deal: '1/2 Price Wine', dealEnd: '6pm', address: '3656 Howell St, Dallas, TX', cover: 10, badge: null, dressCode: 'casual' },
+  { id: 'v3', name: 'Stirr', type: 'SPORTS BAR', district: 'Deep Ellum', image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80', crowd: 0.75, distance: '0.5m', deal: '$4 Draft Beers', dealEnd: '8pm', address: '2803 Main St, Dallas, TX', cover: 0, badge: 'hot', dressCode: 'casual' },
+  { id: 'v4', name: 'Bottled Blonde', type: 'CLUB', district: 'Deep Ellum', image: 'https://images.unsplash.com/photo-1574096079513-d82599602959?w=800&q=80', crowd: 0.95, distance: '0.6m', deal: null, dealEnd: null, address: '2505 Pacific Ave, Dallas, TX', cover: 20, badge: 'hot', dressCode: 'upscale' },
+  { id: 'v5', name: 'Katy Trail Ice House', type: 'BEER GARDEN', district: 'Uptown', image: 'https://images.unsplash.com/photo-1582234031666-41f237f37299?w=800&q=80', crowd: 0.35, distance: '1.2m', deal: '$3 Tacos', dealEnd: '7pm', address: '3127 Routh St, Dallas, TX', cover: 0, badge: 'new', dressCode: 'casual' },
 ];
 
 // TODO: GET /api/districts
@@ -51,6 +51,26 @@ const PERFORMERS = [
 const CATEGORIES = ['Rooftops', 'Speakeasies', 'Dive Bars', 'Live Music'];
 
 // ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+const getVibeFromCrowd = (crowd) => {
+  if (crowd >= 0.85) return { label: 'PACKED', color: '#ef4444', bg: 'bg-red-500' };
+  if (crowd >= 0.60) return { label: 'HYPE', color: '#f97316', bg: 'bg-orange-500' };
+  if (crowd >= 0.40) return { label: 'MODERATE', color: '#3b82f6', bg: 'bg-blue-500' };
+  return { label: 'CHILL', color: '#22c55e', bg: 'bg-green-500' };
+};
+
+const getDressCodeInfo = (code) => {
+  const codes = {
+    casual: { label: 'Casual', color: '#22c55e', icon: '👟' },
+    smart: { label: 'Smart Casual', color: '#3b82f6', icon: '👔' },
+    upscale: { label: 'Upscale', color: '#a855f7', icon: '🎩' }
+  };
+  return codes[code] || codes.casual;
+};
+
+// ============================================================================
 // SPLASH SCREEN
 // ============================================================================
 
@@ -70,38 +90,18 @@ const SplashScreen = ({ onComplete }) => {
 
   return (
     <div className={`fixed inset-0 bg-zinc-950 flex flex-col items-center justify-center z-50 transition-opacity duration-500 ${phase >= 4 ? 'opacity-0' : 'opacity-100'}`}>
-      {/* Logo */}
       <div className="flex items-center gap-2">
-        <span 
-          className={`text-5xl font-black tracking-tight text-white transition-all duration-500 ${phase >= 1 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95'}`}
-        >
+        <span className={`text-5xl font-black tracking-tight text-white transition-all duration-500 ${phase >= 1 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95'}`}>
           Krowd
         </span>
-        <span 
-          className={`text-5xl font-black tracking-tight transition-all duration-500 ${phase >= 2 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95'}`}
-          style={{ color: ACCENT }}
-        >
+        <span className={`text-5xl font-black tracking-tight transition-all duration-500 ${phase >= 2 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95'}`} style={{ color: ACCENT }}>
           Guide
         </span>
       </div>
-
-      {/* Tagline */}
-      <p 
-        className={`text-sm tracking-widest text-zinc-500 uppercase mt-4 transition-all duration-500 ${phase >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
-      >
+      <p className={`text-sm tracking-widest text-zinc-500 uppercase mt-4 transition-all duration-500 ${phase >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
         Know Before You Go
       </p>
-
-      {/* Glow Effect */}
-      <div 
-        className={`absolute w-64 h-64 rounded-full transition-opacity duration-1000 ${phase >= 3 ? 'opacity-100' : 'opacity-0'}`}
-        style={{ 
-          background: `radial-gradient(circle, ${ACCENT}20 0%, transparent 70%)`,
-          filter: 'blur(40px)'
-        }}
-      />
-
-      {/* Loading dots */}
+      <div className={`absolute w-64 h-64 rounded-full transition-opacity duration-1000 ${phase >= 3 ? 'opacity-100' : 'opacity-0'}`} style={{ background: `radial-gradient(circle, ${ACCENT}20 0%, transparent 70%)`, filter: 'blur(40px)' }} />
       <div className={`flex gap-1 mt-8 transition-opacity duration-500 ${phase >= 3 ? 'opacity-100' : 'opacity-0'}`}>
         <div className="w-2 h-2 rounded-full bg-zinc-600 animate-pulse" style={{ animationDelay: '0ms' }} />
         <div className="w-2 h-2 rounded-full bg-zinc-600 animate-pulse" style={{ animationDelay: '150ms' }} />
@@ -116,7 +116,7 @@ const SplashScreen = ({ onComplete }) => {
 // ============================================================================
 
 const LocationScreen = ({ onGranted, onDenied }) => {
-  const [status, setStatus] = useState('prompt'); // prompt | requesting | denied | unsupported
+  const [status, setStatus] = useState('prompt');
   const [fadeIn, setFadeIn] = useState(false);
 
   useEffect(() => {
@@ -128,16 +128,10 @@ const LocationScreen = ({ onGranted, onDenied }) => {
       setStatus('unsupported');
       return;
     }
-
     setStatus('requesting');
-
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        console.log('[Location] Granted:', position.coords);
-        onGranted({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        });
+        onGranted({ lat: position.coords.latitude, lng: position.coords.longitude });
       },
       (error) => {
         console.log('[Location] Denied:', error.message);
@@ -150,12 +144,8 @@ const LocationScreen = ({ onGranted, onDenied }) => {
 
   return (
     <div className={`fixed inset-0 bg-zinc-950 flex flex-col items-center justify-center px-8 z-50 transition-opacity duration-500 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
-      {/* Icon */}
       <div className="relative mb-8">
-        <div 
-          className="absolute inset-0 w-24 h-24 rounded-full animate-pulse"
-          style={{ background: `${ACCENT}20`, filter: 'blur(20px)' }}
-        />
+        <div className="absolute inset-0 w-24 h-24 rounded-full animate-pulse" style={{ background: `${ACCENT}20`, filter: 'blur(20px)' }} />
         <div className="relative w-24 h-24 rounded-full bg-zinc-900 flex items-center justify-center">
           {status === 'denied' || status === 'unsupported' ? (
             <AlertCircle size={48} className="text-red-500" />
@@ -164,15 +154,9 @@ const LocationScreen = ({ onGranted, onDenied }) => {
           )}
         </div>
       </div>
-
-      {/* Headline */}
       <h1 className="text-3xl font-bold text-white text-center mb-4">
-        {status === 'denied' ? 'Location Required' : 
-         status === 'unsupported' ? 'Location Not Supported' : 
-         'Enable Location'}
+        {status === 'denied' ? 'Location Required' : status === 'unsupported' ? 'Location Not Supported' : 'Enable Location'}
       </h1>
-
-      {/* Subtext */}
       <p className="text-base text-zinc-400 text-center max-w-xs mb-8">
         {status === 'denied' 
           ? 'Krowd Guide needs your location to show venues near you. Please enable location in your browser settings.'
@@ -180,22 +164,11 @@ const LocationScreen = ({ onGranted, onDenied }) => {
           ? "Your browser doesn't support location services. Try using a different browser."
           : 'Krowd Guide uses your location to show nearby venues, live crowd levels, and personalized recommendations.'}
       </p>
-
-      {/* CTA Button */}
       {status !== 'unsupported' && (
-        <button
-          onClick={requestLocation}
-          disabled={status === 'requesting'}
-          className="w-full max-w-xs py-4 rounded-2xl font-bold text-white transition-all active:scale-95 disabled:opacity-50"
-          style={{ backgroundColor: ACCENT }}
-        >
-          {status === 'requesting' ? 'Requesting...' : 
-           status === 'denied' ? 'Try Again' : 
-           'Enable Location'}
+        <button onClick={requestLocation} disabled={status === 'requesting'} className="w-full max-w-xs py-4 rounded-2xl font-bold text-white transition-all active:scale-95 disabled:opacity-50" style={{ backgroundColor: ACCENT }}>
+          {status === 'requesting' ? 'Requesting...' : status === 'denied' ? 'Try Again' : 'Enable Location'}
         </button>
       )}
-
-      {/* Privacy note */}
       <div className="flex items-center gap-2 mt-6 text-zinc-600">
         <Lock size={14} />
         <span className="text-xs">Your location stays private and is never shared</span>
@@ -234,17 +207,27 @@ const LoadBadge = memo(({ load }) => {
   return (
     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60">
       <div className={`w-2 h-2 rounded-full ${color}`} />
-      <span className="text-white text-xs font-bold">{percentage}% LOAD</span>
+      <span className="text-white text-xs font-bold">{percentage}%</span>
     </div>
   );
 });
 
-const SafetyBadge = memo(({ safety }) => {
-  const isHigh = safety === 'high';
+const VibeBadge = memo(({ crowd }) => {
+  const vibe = getVibeFromCrowd(crowd);
   return (
     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60">
-      <div className={`w-2 h-2 rounded-full ${isHigh ? 'bg-green-500' : 'bg-yellow-400'}`} />
-      <span className={`text-xs font-bold ${isHigh ? 'text-green-400' : 'text-yellow-400'}`}>{safety.toUpperCase()} SAFETY</span>
+      <div className={`w-2 h-2 rounded-full ${vibe.bg}`} />
+      <span className="text-xs font-bold" style={{ color: vibe.color }}>{vibe.label}</span>
+    </div>
+  );
+});
+
+const DressCodeBadge = memo(({ code }) => {
+  const info = getDressCodeInfo(code);
+  return (
+    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60">
+      <span className="text-xs">{info.icon}</span>
+      <span className="text-xs font-bold" style={{ color: info.color }}>{info.label}</span>
     </div>
   );
 });
@@ -266,18 +249,10 @@ const PriceBadge = memo(({ cover }) => (
 
 const ActionButtons = memo(({ onShare, onFavorite, isFavorited }) => (
   <div className="flex gap-2">
-    <button 
-      onClick={onShare}
-      className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center active:scale-95 transition-transform"
-      aria-label="Share"
-    >
+    <button onClick={onShare} className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center active:scale-95 transition-transform" aria-label="Share">
       <Send size={18} className="text-white" />
     </button>
-    <button 
-      onClick={onFavorite}
-      className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center active:scale-95 transition-transform"
-      aria-label="Favorite"
-    >
+    <button onClick={onFavorite} className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center active:scale-95 transition-transform" aria-label="Favorite">
       <Heart size={18} className={isFavorited ? 'text-pink-500 fill-pink-500' : 'text-white'} />
     </button>
   </div>
@@ -289,8 +264,10 @@ const ActionButtons = memo(({ onShare, onFavorite, isFavorited }) => (
 
 const VenueModal = memo(({ venue, onClose }) => {
   const [isFavorited, setIsFavorited] = useState(false);
-
   if (!venue) return null;
+
+  const vibe = getVibeFromCrowd(venue.crowd);
+  const dressInfo = getDressCodeInfo(venue.dressCode);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
@@ -306,14 +283,10 @@ const VenueModal = memo(({ venue, onClose }) => {
           <img src={venue.image} alt={venue.name} className="w-full h-full object-cover" />
           <div className="absolute top-3 left-3 flex gap-2">
             <LoadBadge load={venue.crowd} />
-            <SafetyBadge safety={venue.safety} />
+            <VibeBadge crowd={venue.crowd} />
           </div>
           <div className="absolute top-3 right-3">
-            <ActionButtons 
-              onShare={() => alert(`Share ${venue.name}`)}
-              onFavorite={() => setIsFavorited(!isFavorited)}
-              isFavorited={isFavorited}
-            />
+            <ActionButtons onShare={() => alert(`Share ${venue.name}`)} onFavorite={() => setIsFavorited(!isFavorited)} isFavorited={isFavorited} />
           </div>
         </div>
         
@@ -322,6 +295,20 @@ const VenueModal = memo(({ venue, onClose }) => {
           <PriceBadge cover={venue.cover} />
         </div>
         <p className="text-zinc-400 text-sm mb-4">{venue.type} • {venue.district}</p>
+
+        {/* Vibe & Dress Code Info */}
+        <div className="flex gap-3 mb-4">
+          <div className="flex-1 p-3 rounded-xl bg-zinc-800">
+            <p className="text-zinc-500 text-xs mb-1">Vibe</p>
+            <p className="font-bold" style={{ color: vibe.color }}>{vibe.label}</p>
+          </div>
+          <div className="flex-1 p-3 rounded-xl bg-zinc-800">
+            <p className="text-zinc-500 text-xs mb-1">Dress Code</p>
+            <p className="font-bold flex items-center gap-1" style={{ color: dressInfo.color }}>
+              {dressInfo.icon} {dressInfo.label}
+            </p>
+          </div>
+        </div>
         
         {venue.deal && (
           <div className="bg-zinc-800 rounded-xl p-4 mb-4">
@@ -348,7 +335,7 @@ const VenueModal = memo(({ venue, onClose }) => {
 });
 
 // ============================================================================
-// DISCOVER MODE (Swipeable Full-Screen Cards)
+// DISCOVER MODE
 // ============================================================================
 
 const DiscoverMode = memo(({ onClose }) => {
@@ -357,6 +344,8 @@ const DiscoverMode = memo(({ onClose }) => {
 
   const event = EVENTS[currentIndex];
   const venue = VENUES.find(v => v.id === event.venueId);
+  const vibe = venue ? getVibeFromCrowd(venue.crowd) : null;
+  const dressInfo = venue ? getDressCodeInfo(venue.dressCode) : null;
 
   const goNext = () => setCurrentIndex(i => Math.min(i + 1, EVENTS.length - 1));
   const goPrev = () => setCurrentIndex(i => Math.max(i - 1, 0));
@@ -364,23 +353,23 @@ const DiscoverMode = memo(({ onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black">
-      {/* Background Image */}
       <div className="absolute inset-0">
         <img src={event.image} alt={event.name} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
       </div>
 
-      {/* Header */}
       <div className="absolute top-12 left-5 right-5 flex justify-between items-start z-10">
-        {event.isLive && <LiveNowBadge />}
-        {!event.isLive && <div />}
+        <div className="flex flex-col gap-2">
+          {event.isLive && <LiveNowBadge />}
+          {venue && <VibeBadge crowd={venue.crowd} />}
+          {venue && <DressCodeBadge code={venue.dressCode} />}
+        </div>
         <div className="bg-zinc-900/80 rounded-lg px-3 py-2 text-center">
           <p className="text-zinc-400 text-xs uppercase">{event.date.split(',')[0] || 'JAN'}</p>
           <p className="text-white text-xl font-bold">{event.time.split(':')[0]}</p>
         </div>
       </div>
 
-      {/* Content */}
       <div className="absolute bottom-32 left-5 right-5 z-10">
         <h1 className="text-4xl font-bold text-white mb-2">{event.name}</h1>
         <p className="text-lg font-bold mb-1" style={{ color: ACCENT }}>{event.date}, {event.time}</p>
@@ -388,36 +377,22 @@ const DiscoverMode = memo(({ onClose }) => {
         
         <div className="flex items-center justify-between mt-6">
           <PriceBadge cover={event.cover} />
-          <ActionButtons 
-            onShare={() => alert(`Share ${event.name}`)}
-            onFavorite={toggleFavorite}
-            isFavorited={favorites[event.id]}
-          />
+          <ActionButtons onShare={() => alert(`Share ${event.name}`)} onFavorite={toggleFavorite} isFavorited={favorites[event.id]} />
         </div>
       </div>
 
-      {/* Navigation */}
       <div className="absolute bottom-10 left-0 right-0 flex justify-center items-center gap-4 z-10">
-        <button 
-          onClick={goPrev}
-          disabled={currentIndex === 0}
-          className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center disabled:opacity-30"
-        >
+        <button onClick={goPrev} disabled={currentIndex === 0} className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center disabled:opacity-30">
           <ChevronLeft size={24} className="text-white" />
         </button>
         <button onClick={onClose} className="w-14 h-14 rounded-full bg-white flex items-center justify-center">
           <X size={24} className="text-black" />
         </button>
-        <button 
-          onClick={goNext}
-          disabled={currentIndex === EVENTS.length - 1}
-          className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center disabled:opacity-30"
-        >
+        <button onClick={goNext} disabled={currentIndex === EVENTS.length - 1} className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center disabled:opacity-30">
           <ChevronRightIcon size={24} className="text-white" />
         </button>
       </div>
 
-      {/* Progress dots */}
       <div className="absolute bottom-28 left-0 right-0 flex justify-center gap-1 z-10">
         {EVENTS.map((_, i) => (
           <div key={i} className={`w-2 h-2 rounded-full ${i === currentIndex ? 'bg-white' : 'bg-zinc-600'}`} />
@@ -433,16 +408,12 @@ const DiscoverMode = memo(({ onClose }) => {
 
 const HomeTab = ({ onVenueSelect }) => {
   const happyHourVenues = VENUES.filter(v => v.deal);
-  const trendingVenues = VENUES.filter(v => v.crowd >= 0.7);
+  const trendingVenues = VENUES.filter(v => v.crowd >= 0.5);
 
-  const handleViewAll = (section) => {
-    console.log('[Navigation] View all:', section);
-    alert(`Viewing all ${section}`);
-  };
+  const handleViewAll = (section) => alert(`Viewing all ${section}`);
 
   return (
     <div className="h-full overflow-y-auto pb-28 bg-zinc-950">
-      {/* Header */}
       <header className="px-5 pt-12 pb-4 flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold">
@@ -454,7 +425,6 @@ const HomeTab = ({ onVenueSelect }) => {
         <Avatar />
       </header>
 
-      {/* Krowd Intelligence */}
       <section className="px-5 mb-6">
         <div className="flex items-center gap-3 p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
           <div className="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
@@ -467,7 +437,6 @@ const HomeTab = ({ onVenueSelect }) => {
         </div>
       </section>
 
-      {/* Happy Hours */}
       <section className="mb-6">
         <div className="flex items-center justify-between px-5 mb-4">
           <div className="flex items-center gap-2">
@@ -493,7 +462,6 @@ const HomeTab = ({ onVenueSelect }) => {
         </div>
       </section>
 
-      {/* Trending */}
       <section className="mb-6">
         <div className="flex items-center justify-between px-5 mb-4">
           <div className="flex items-center gap-2">
@@ -511,8 +479,9 @@ const HomeTab = ({ onVenueSelect }) => {
                 <div className="absolute top-3 right-3 flex gap-2">
                   <LoadBadge load={venue.crowd} />
                 </div>
-                <div className="absolute bottom-3 left-3">
-                  <SafetyBadge safety={venue.safety} />
+                <div className="absolute bottom-3 left-3 flex gap-2">
+                  <VibeBadge crowd={venue.crowd} />
+                  <DressCodeBadge code={venue.dressCode} />
                 </div>
                 <div className="absolute bottom-3 right-3">
                   <PriceBadge cover={venue.cover} />
@@ -530,7 +499,6 @@ const HomeTab = ({ onVenueSelect }) => {
         </div>
       </section>
 
-      {/* Categories */}
       <section className="px-5">
         <div className="grid grid-cols-2 gap-3">
           {CATEGORIES.map(cat => (
@@ -580,12 +548,7 @@ const MapTab = ({ onDistrictSelect }) => {
       </header>
 
       {DISTRICTS.map(district => (
-        <button
-          key={district.id}
-          onClick={() => onDistrictSelect(district)}
-          className="absolute flex flex-col items-center active:scale-110 transition-transform"
-          style={{ left: `${district.x}%`, top: `${district.y}%`, transform: 'translate(-50%, -50%)' }}
-        >
+        <button key={district.id} onClick={() => onDistrictSelect(district)} className="absolute flex flex-col items-center active:scale-110 transition-transform" style={{ left: `${district.x}%`, top: `${district.y}%`, transform: 'translate(-50%, -50%)' }}>
           <div className="w-16 h-16 rounded-full flex flex-col items-center justify-center mb-1 border-2" style={{ backgroundColor: `${district.color}20`, borderColor: `${district.color}40` }}>
             <span className="text-xl font-bold" style={{ color: district.color }}>{district.venues}</span>
             <span className="text-[10px] font-medium" style={{ color: district.color }}>VENUES</span>
@@ -608,16 +571,11 @@ const EventsTab = ({ onEventSelect, onDiscoverOpen }) => {
     <div className="h-full overflow-y-auto pb-28 pt-12 px-5 bg-zinc-950">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-3xl font-bold text-white">Tonight's Events</h1>
-        <button 
-          onClick={onDiscoverOpen}
-          className="px-4 py-2 rounded-full font-bold text-sm text-white active:scale-95 transition-transform"
-          style={{ backgroundColor: ACCENT }}
-        >
+        <button onClick={onDiscoverOpen} className="px-4 py-2 rounded-full font-bold text-sm text-white active:scale-95 transition-transform" style={{ backgroundColor: ACCENT }}>
           Discover
         </button>
       </div>
 
-      {/* Performer Circles */}
       <div className="flex gap-4 overflow-x-auto pb-4 mb-4 scrollbar-hide">
         <div className="flex flex-col items-center gap-2 shrink-0">
           <button className="w-16 h-16 rounded-full border-2 border-dashed border-zinc-600 flex items-center justify-center bg-zinc-900">
@@ -639,35 +597,37 @@ const EventsTab = ({ onEventSelect, onDiscoverOpen }) => {
       </div>
       
       <div className="space-y-4">
-        {EVENTS.map(event => (
-          <button key={event.id} onClick={() => onEventSelect(event)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-zinc-900 text-left active:scale-[0.98] transition-transform">
-            <div className="w-20 h-20 rounded-xl bg-zinc-950 flex flex-col items-center justify-center shrink-0 relative overflow-hidden">
-              <img src={event.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
-              <span className="text-zinc-400 text-xs font-bold relative">TODAY</span>
-              <span className="text-white text-2xl font-bold relative">{event.time}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                {event.isLive && <LiveNowBadge />}
+        {EVENTS.map(event => {
+          const venue = VENUES.find(v => v.id === event.venueId);
+          return (
+            <button key={event.id} onClick={() => onEventSelect(event)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-zinc-900 text-left active:scale-[0.98] transition-transform">
+              <div className="w-20 h-20 rounded-xl bg-zinc-950 flex flex-col items-center justify-center shrink-0 relative overflow-hidden">
+                <img src={event.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
+                <span className="text-zinc-400 text-xs font-bold relative">TODAY</span>
+                <span className="text-white text-2xl font-bold relative">{event.time}</span>
               </div>
-              <h3 className="text-white font-bold text-lg truncate">{event.name}</h3>
-              <p className="font-bold truncate" style={{ color: ACCENT }}>{event.venue}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-zinc-500 text-sm">{event.district}</span>
-                <PriceBadge cover={event.cover} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  {event.isLive && <LiveNowBadge />}
+                  {venue && <VibeBadge crowd={venue.crowd} />}
+                </div>
+                <h3 className="text-white font-bold text-lg truncate">{event.name}</h3>
+                <p className="font-bold truncate" style={{ color: ACCENT }}>{event.venue}</p>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <span className="text-zinc-500 text-sm">{event.district}</span>
+                  {venue && <DressCodeBadge code={venue.dressCode} />}
+                  <PriceBadge cover={event.cover} />
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <button 
-                onClick={(e) => { e.stopPropagation(); setFavorites(f => ({ ...f, [event.id]: !f[event.id] })); }}
-                className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center"
-              >
-                <Heart size={18} className={favorites[event.id] ? 'text-pink-500 fill-pink-500' : 'text-zinc-500'} />
-              </button>
-              <ChevronRight size={20} className="text-zinc-600" />
-            </div>
-          </button>
-        ))}
+              <div className="flex flex-col items-center gap-2">
+                <button onClick={(e) => { e.stopPropagation(); setFavorites(f => ({ ...f, [event.id]: !f[event.id] })); }} className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center">
+                  <Heart size={18} className={favorites[event.id] ? 'text-pink-500 fill-pink-500' : 'text-zinc-500'} />
+                </button>
+                <ChevronRight size={20} className="text-zinc-600" />
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -703,11 +663,13 @@ const ProfileTab = ({ onVenueSelect }) => {
           <button key={venue.id} onClick={() => onVenueSelect(venue)} className="w-full flex items-center gap-3 p-3 rounded-xl bg-zinc-900 text-left active:scale-[0.98] transition-transform">
             <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0">
               <img src={venue.image} alt={venue.name} className="w-full h-full object-cover" />
-              <VenueBadge badge={venue.badge} />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-white font-bold truncate">{venue.name}</h3>
-              <p className="text-zinc-400 text-xs">{venue.district}</p>
+              <div className="flex items-center gap-2">
+                <VibeBadge crowd={venue.crowd} />
+                <DressCodeBadge code={venue.dressCode} />
+              </div>
             </div>
             <ChevronRight size={18} className="text-zinc-600 shrink-0" />
           </button>
@@ -736,13 +698,7 @@ const BottomNav = memo(({ activeTab, setActiveTab }) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-90 ${isActive ? 'text-white' : 'text-zinc-500'}`}
-              style={{ backgroundColor: isActive ? ACCENT : 'transparent' }}
-              aria-label={`Switch to ${tab.label} tab`}
-            >
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-90 ${isActive ? 'text-white' : 'text-zinc-500'}`} style={{ backgroundColor: isActive ? ACCENT : 'transparent' }} aria-label={`Switch to ${tab.label} tab`}>
               <Icon size={24} />
             </button>
           );
@@ -764,19 +720,10 @@ export default function App() {
   const [discoverOpen, setDiscoverOpen] = useState(false);
 
   const handleSplashComplete = useCallback(() => setAppPhase('location'), []);
-  
-  const handleLocationGranted = useCallback((location) => {
-    setUserLocation(location);
-    setAppPhase('ready');
-  }, []);
-
+  const handleLocationGranted = useCallback((location) => { setUserLocation(location); setAppPhase('ready'); }, []);
   const handleVenueSelect = useCallback((venue) => setSelectedVenue(venue), []);
   const handleVenueClose = useCallback(() => setSelectedVenue(null), []);
-
-  const handleDistrictSelect = useCallback((district) => {
-    alert(`${district.name}\n${district.venues} venues available`);
-  }, []);
-
+  const handleDistrictSelect = useCallback((district) => alert(`${district.name}\n${district.venues} venues available`), []);
   const handleEventSelect = useCallback((event) => {
     const venue = VENUES.find(v => v.id === event.venueId);
     if (venue) setSelectedVenue(venue);
@@ -793,10 +740,7 @@ export default function App() {
       `}</style>
 
       {appPhase === 'splash' && <SplashScreen onComplete={handleSplashComplete} />}
-      
-      {appPhase === 'location' && (
-        <LocationScreen onGranted={handleLocationGranted} />
-      )}
+      {appPhase === 'location' && <LocationScreen onGranted={handleLocationGranted} />}
 
       {appPhase === 'ready' && (
         <>
@@ -806,10 +750,8 @@ export default function App() {
             {activeTab === 'events' && <EventsTab onEventSelect={handleEventSelect} onDiscoverOpen={() => setDiscoverOpen(true)} />}
             {activeTab === 'profile' && <ProfileTab onVenueSelect={handleVenueSelect} />}
           </main>
-
           {selectedVenue && <VenueModal venue={selectedVenue} onClose={handleVenueClose} />}
           {discoverOpen && <DiscoverMode onClose={() => setDiscoverOpen(false)} />}
-
           <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
         </>
       )}
