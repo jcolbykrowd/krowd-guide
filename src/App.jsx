@@ -50,6 +50,11 @@ const splashStyles = `
     0% { opacity: 1; }
     100% { opacity: 0; }
   }
+
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(255,46,99,0.4); }
+    50% { box-shadow: 0 0 40px rgba(255,46,99,0.8); }
+  }
   
   .splash-container {
     position: fixed;
@@ -83,6 +88,7 @@ const splashStyles = `
     margin-left: -60px;
     border-radius: 50%;
     border: 2px solid #FF2E63;
+    box-shadow: 0 0 24px rgba(255,46,99,0.5);
     animation: pulse-ring 2s ease-out infinite;
   }
   
@@ -103,8 +109,8 @@ const splashStyles = `
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: logo-appear 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    box-shadow: 0 20px 60px rgba(255, 46, 99, 0.4);
+    animation: logo-appear 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, glow-pulse 2s ease-in-out infinite;
+    box-shadow: 0 20px 60px rgba(255, 46, 99, 0.5);
   }
   
   .splash-logo-letter {
@@ -112,6 +118,7 @@ const splashStyles = `
     font-weight: 800;
     color: white;
     font-family: system-ui, -apple-system, sans-serif;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
   }
   
   .splash-title {
@@ -122,10 +129,12 @@ const splashStyles = `
     animation: text-slide-up 0.6s ease forwards;
     animation-delay: 0.4s;
     opacity: 0;
+    text-shadow: 0 0 30px rgba(255,46,99,0.3);
   }
   
   .splash-title-accent {
     color: #FF2E63;
+    text-shadow: 0 0 30px rgba(255,46,99,0.5);
   }
   
   .splash-tagline {
@@ -149,8 +158,9 @@ const splashStyles = `
   .splash-dot {
     width: 10px;
     height: 10px;
-    background-color: #FF2E63;
+    background: linear-gradient(135deg, #FF2E63 0%, #ff5f8a 100%);
     border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255,46,99,0.6);
     animation: dot-bounce 1.4s ease-in-out infinite both;
   }
   
@@ -478,7 +488,54 @@ function getTimeAgo(date) {
 }
 
 // ============================================================================
-// STYLES
+// GLOBAL STYLES CSS
+// ============================================================================
+
+const globalStyles = `
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  @keyframes glow-pulse-subtle {
+    0%, 100% { box-shadow: 0 4px 16px rgba(255,46,99,0.4); }
+    50% { box-shadow: 0 4px 24px rgba(255,46,99,0.6); }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255,46,99,0.3);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,46,99,0.5);
+  }
+
+  /* Focus states for accessibility */
+  button:focus-visible, a:focus-visible {
+    outline: 2px solid #FF2E63;
+    outline-offset: 2px;
+  }
+`;
+
+// ============================================================================
+// STYLES - Enhanced with glassmorphism, neon glows, and transitions
 // ============================================================================
 
 const styles = {
@@ -487,87 +544,129 @@ const styles = {
     width: '100vw',
     overflow: 'hidden',
     position: 'relative',
-    backgroundColor: '#09090b',
+    background: 'linear-gradient(135deg, #09090b 0%, #18181b 50%, #09090b 100%)',
+    backgroundSize: '200% 200%',
+    animation: 'gradient-shift 10s ease infinite',
     fontFamily: 'system-ui, -apple-system, sans-serif',
-    color: 'white'
+    color: 'white',
+    WebkitFontSmoothing: 'antialiased',
+    MozOsxFontSmoothing: 'grayscale'
   },
   main: {
     height: '100%',
     overflowY: 'auto',
-    paddingBottom: 100
+    paddingBottom: 120
   },
   card: {
-    backgroundColor: '#18181b',
-    borderRadius: 16,
-    border: '1px solid #27272a',
-    overflow: 'hidden'
+    backgroundColor: 'rgba(24,24,27,0.85)',
+    borderRadius: 24,
+    border: '1px solid rgba(255,46,99,0.1)',
+    overflow: 'hidden',
+    boxShadow: '0 6px 24px rgba(0,0,0,0.5)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease'
+  },
+  cardHover: {
+    transform: 'scale(1.02)',
+    boxShadow: '0 8px 32px rgba(255,46,99,0.25)',
+    borderColor: 'rgba(255,46,99,0.25)'
   },
   badge: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
-    padding: '5px 10px',
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: '6px 14px',
+    borderRadius: 24,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     fontSize: 12,
-    fontWeight: 600
+    fontWeight: 600,
+    boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    border: '1px solid rgba(255,255,255,0.05)'
   },
   btn: {
-    backgroundColor: ACCENT,
+    background: 'linear-gradient(135deg, #FF2E63 0%, #ff5f8a 100%)',
     color: 'white',
     border: 'none',
-    borderRadius: 16,
-    padding: '14px 20px',
+    borderRadius: 20,
+    padding: '16px 24px',
     fontWeight: 700,
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8
+    gap: 8,
+    boxShadow: '0 4px 20px rgba(255,46,99,0.5)',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+  },
+  btnHover: {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 6px 28px rgba(255,46,99,0.6)'
+  },
+  btnActive: {
+    transform: 'scale(0.98)',
+    boxShadow: '0 2px 12px rgba(255,46,99,0.4)'
   },
   btnSecondary: {
-    backgroundColor: '#27272a',
+    backgroundColor: 'rgba(39,39,42,0.8)',
     color: 'white',
-    border: '1px solid #3f3f46',
-    borderRadius: 16,
-    padding: '14px 20px',
+    border: '1px solid rgba(63,63,70,0.6)',
+    borderRadius: 20,
+    padding: '16px 24px',
     fontWeight: 700,
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8
+    gap: 8,
+    boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    transition: 'border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease'
+  },
+  btnSecondaryHover: {
+    borderColor: 'rgba(255,46,99,0.4)',
+    boxShadow: '0 4px 16px rgba(255,46,99,0.15)'
   },
   filterChip: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
-    padding: '8px 14px',
-    borderRadius: 20,
+    padding: '10px 16px',
+    borderRadius: 24,
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
     whiteSpace: 'nowrap',
-    border: '1px solid #3f3f46',
-    backgroundColor: '#18181b',
-    color: '#a1a1aa'
+    border: '1px solid rgba(63,63,70,0.5)',
+    backgroundColor: 'rgba(24,24,27,0.8)',
+    color: '#a1a1aa',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    transition: 'all 0.2s ease'
   },
   filterChipActive: {
-    backgroundColor: ACCENT + '20',
+    backgroundColor: 'rgba(255,46,99,0.2)',
     borderColor: ACCENT,
-    color: ACCENT
+    color: ACCENT,
+    boxShadow: '0 0 12px rgba(255,46,99,0.3)'
   },
   nav: {
     position: 'fixed',
-    bottom: 20,
+    bottom: 24,
     left: '50%',
     transform: 'translateX(-50%)',
-    backgroundColor: 'rgba(24,24,27,0.95)',
+    backgroundColor: 'rgba(9,9,11,0.75)',
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
     borderRadius: 40,
-    padding: 8,
+    padding: 10,
     display: 'flex',
-    gap: 4,
-    border: '1px solid #27272a',
+    gap: 6,
+    border: '1px solid rgba(255,46,99,0.15)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset',
     zIndex: 100
   },
   navBtn: {
@@ -578,40 +677,152 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
+  },
+  navBtnActive: {
+    boxShadow: '0 0 20px rgba(255,46,99,0.5)',
+    transform: 'scale(1.05)'
   },
   modal: {
     position: 'fixed',
     inset: 0,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(0,0,0,0.85)',
     zIndex: 200,
     display: 'flex',
     alignItems: 'flex-end',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)'
   },
   modalContent: {
-    backgroundColor: '#18181b',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
+    backgroundColor: 'rgba(24,24,27,0.95)',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 28,
     width: '100%',
     maxWidth: 500,
     maxHeight: '90vh',
-    overflowY: 'auto'
+    overflowY: 'auto',
+    boxShadow: '0 -8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,46,99,0.1) inset',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)'
   },
   disclaimer: {
     fontSize: 11,
     color: '#71717a',
     fontStyle: 'italic',
-    marginTop: 4
+    marginTop: 4,
+    opacity: 0.8
   },
   infoCard: {
-    padding: 14,
-    borderRadius: 12,
-    backgroundColor: '#27272a',
-    marginBottom: 12
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: 'rgba(39,39,42,0.7)',
+    marginBottom: 14,
+    boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.05), 0 2px 8px rgba(0,0,0,0.2)',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    border: '1px solid rgba(255,255,255,0.03)'
+  },
+  searchBar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(24,24,27,0.8)',
+    border: '1px solid rgba(63,63,70,0.5)',
+    borderRadius: 16,
+    padding: '14px 18px',
+    marginBottom: 12,
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
+  },
+  searchBarFocus: {
+    borderColor: 'rgba(255,46,99,0.4)',
+    boxShadow: '0 0 0 3px rgba(255,46,99,0.1)'
+  },
+  glowText: {
+    textShadow: '0 0 20px rgba(255,46,99,0.4)'
+  },
+  neonBorder: {
+    border: '1px solid rgba(255,46,99,0.3)',
+    boxShadow: '0 0 15px rgba(255,46,99,0.2)'
   }
 };
+
+// ============================================================================
+// INTERACTIVE COMPONENTS WITH HOVER STATES
+// ============================================================================
+
+function InteractiveCard({ children, onClick, style = {} }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
+  
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => { setIsHovered(false); setIsPressed(false); }}
+      onMouseDown={() => setIsPressed(true)}
+      onMouseUp={() => setIsPressed(false)}
+      onTouchStart={() => setIsPressed(true)}
+      onTouchEnd={() => setIsPressed(false)}
+      style={{
+        ...styles.card,
+        ...style,
+        transform: isPressed ? 'scale(0.98)' : isHovered ? 'scale(1.02)' : 'scale(1)',
+        boxShadow: isHovered ? '0 8px 32px rgba(255,46,99,0.2)' : styles.card.boxShadow,
+        borderColor: isHovered ? 'rgba(255,46,99,0.2)' : 'rgba(255,46,99,0.1)',
+        cursor: onClick ? 'pointer' : 'default'
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function InteractiveButton({ children, onClick, style = {}, variant = 'primary', disabled = false }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
+  
+  const baseStyle = variant === 'primary' ? styles.btn : styles.btnSecondary;
+  const hoverStyle = variant === 'primary' ? styles.btnHover : styles.btnSecondaryHover;
+  
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => { setIsHovered(false); setIsPressed(false); }}
+      onMouseDown={() => setIsPressed(true)}
+      onMouseUp={() => setIsPressed(false)}
+      onTouchStart={() => setIsPressed(true)}
+      onTouchEnd={() => setIsPressed(false)}
+      style={{
+        ...baseStyle,
+        ...style,
+        ...(isHovered && !disabled ? hoverStyle : {}),
+        ...(isPressed && !disabled ? styles.btnActive : {}),
+        opacity: disabled ? 0.5 : 1
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function GlowingBadge({ children, color = ACCENT, style = {} }) {
+  return (
+    <span style={{
+      ...styles.badge,
+      ...style,
+      boxShadow: `0 2px 12px ${color}40`
+    }}>
+      {children}
+    </span>
+  );
+}
 
 // ============================================================================
 // ONBOARDING SCREEN (New per audit - single screen)
@@ -628,7 +839,9 @@ function OnboardingScreen({ onContinue }) {
     <div style={{
       position: 'fixed',
       inset: 0,
-      backgroundColor: '#09090b',
+      background: 'linear-gradient(135deg, #09090b 0%, #18181b 50%, #09090b 100%)',
+      backgroundSize: '200% 200%',
+      animation: 'gradient-shift 10s ease infinite',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -638,14 +851,16 @@ function OnboardingScreen({ onContinue }) {
       opacity: visible ? 1 : 0,
       transition: 'opacity 0.5s ease'
     }}>
+      <style>{globalStyles}</style>
+      
       {/* Logo */}
-      <h1 style={{ fontSize: 36, fontWeight: 700, marginBottom: 8 }}>
+      <h1 style={{ fontSize: 36, fontWeight: 700, marginBottom: 8, ...styles.glowText }}>
         <span style={{ color: 'white' }}>Krowd</span>
         <span style={{ color: ACCENT }}>Guide</span>
       </h1>
       
       {/* Tagline per audit */}
-      <p style={{ fontSize: 24, fontWeight: 600, color: 'white', marginBottom: 8, textAlign: 'center' }}>
+      <p style={{ fontSize: 24, fontWeight: 600, color: 'white', marginBottom: 8, textAlign: 'center', textShadow: '0 0 30px rgba(255,255,255,0.1)' }}>
         Is it a good time to go?
       </p>
       
@@ -655,8 +870,8 @@ function OnboardingScreen({ onContinue }) {
       </p>
 
       {/* Buttons per audit */}
-      <div style={{ width: '100%', maxWidth: 280, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <button 
+      <div style={{ width: '100%', maxWidth: 300, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <InteractiveButton 
           onClick={() => {
             if (navigator.geolocation) {
               navigator.geolocation.getCurrentPosition(
@@ -668,21 +883,21 @@ function OnboardingScreen({ onContinue }) {
               onContinue();
             }
           }}
-          style={styles.btn}
         >
           <MapPin size={20} /> Enable Location
-        </button>
-        <button 
+        </InteractiveButton>
+        <InteractiveButton 
           onClick={onContinue}
-          style={{ ...styles.btnSecondary, backgroundColor: 'transparent', border: 'none' }}
+          variant="secondary"
+          style={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none' }}
         >
           Skip
-        </button>
+        </InteractiveButton>
       </div>
 
       {/* Privacy note */}
-      <p style={{ fontSize: 12, color: '#52525b', marginTop: 32, textAlign: 'center' }}>
-        We only track location at venues. Never your home or work.
+      <p style={{ fontSize: 12, color: '#52525b', marginTop: 40, textAlign: 'center', maxWidth: 280 }}>
+        We only track location at venues within Dallas districts. Never your home or work.
       </p>
     </div>
   );
@@ -928,37 +1143,59 @@ function VenueModal({ venue, onClose, onCheckIn, onReport, checkIns }) {
           onClick={onClose}
           style={{
             position: 'absolute', top: 16, right: 16, width: 44, height: 44,
-            borderRadius: '50%', backgroundColor: '#27272a', border: 'none',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10
+            borderRadius: '50%', backgroundColor: 'rgba(39,39,42,0.8)', border: 'none',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10,
+            backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+            transition: 'transform 0.2s ease'
           }}
         >
           <X size={20} color="white" />
         </button>
 
-        <div style={{ width: 48, height: 5, backgroundColor: '#3f3f46', borderRadius: 10, margin: '0 auto 20px' }} />
+        <div style={{ width: 48, height: 5, backgroundColor: 'rgba(63,63,70,0.8)', borderRadius: 10, margin: '0 auto 20px' }} />
 
         {/* Image with crowd overlay */}
-        <div style={{ position: 'relative', height: 200, borderRadius: 16, overflow: 'hidden', marginBottom: 20 }}>
+        <div style={{ position: 'relative', height: 220, borderRadius: 24, overflow: 'hidden', marginBottom: 24 }}>
           <img src={venue.image} alt={venue.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent 60%)' }} />
           
           {/* Crowd percentage with "Usually" prefix per audit */}
-          <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ position: 'absolute', top: 14, left: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <CrowdBadge percent={venue.crowdPercent} />
             {venue.eco && <EcoBadge />}
           </div>
           
-          <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }}>
-            <button onClick={() => shareVenue(venue)} style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: 'rgba(39,39,42,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <div style={{ position: 'absolute', top: 14, right: 14, display: 'flex', gap: 10 }}>
+            <button 
+              onClick={() => shareVenue(venue)} 
+              style={{ 
+                width: 46, height: 46, borderRadius: '50%', 
+                backgroundColor: 'rgba(39,39,42,0.85)', 
+                backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+                border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+              }}
+            >
               <Send size={18} color="white" />
             </button>
-            <button onClick={() => setLiked(!liked)} style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: 'rgba(39,39,42,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <button 
+              onClick={() => setLiked(!liked)} 
+              style={{ 
+                width: 46, height: 46, borderRadius: '50%', 
+                backgroundColor: 'rgba(39,39,42,0.85)', 
+                backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+                border: liked ? '2px solid #ec4899' : 'none', 
+                boxShadow: liked ? '0 0 20px rgba(236,72,153,0.4)' : 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
               <Heart size={18} color={liked ? '#ec4899' : 'white'} fill={liked ? '#ec4899' : 'none'} />
             </button>
           </div>
           
           {(venue.accessible || venue.hearingLoop) && (
-            <div style={{ position: 'absolute', bottom: 12, left: 12 }}>
+            <div style={{ position: 'absolute', bottom: 14, left: 14 }}>
               <AccessibleBadge wheelchair={venue.accessible} hearing={venue.hearingLoop} />
             </div>
           )}
@@ -966,25 +1203,26 @@ function VenueModal({ venue, onClose, onCheckIn, onReport, checkIns }) {
 
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>{venue.name}</h2>
+          <h2 style={{ fontSize: 26, fontWeight: 700, margin: 0, ...styles.glowText }}>{venue.name}</h2>
           <PriceBadge cover={venue.cover} />
         </div>
-        <p style={{ color: '#a1a1aa', fontSize: 14, marginBottom: 20 }}>{venue.type} • {venue.district}</p>
+        <p style={{ color: '#a1a1aa', fontSize: 14, marginBottom: 24 }}>{venue.type} • {venue.district}</p>
 
         {/* PILLAR 1: Crowd Level (with proper terminology per audit) */}
         <div style={styles.infoCard}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <p style={{ color: '#71717a', fontSize: 12, marginBottom: 4 }}>Crowd Level</p>
-              <p style={{ fontWeight: 700, fontSize: 18, color: crowd.color, margin: 0 }}>{crowd.label}</p>
+              <p style={{ color: '#71717a', fontSize: 12, marginBottom: 6 }}>Crowd Level</p>
+              <p style={{ fontWeight: 700, fontSize: 20, color: crowd.color, margin: 0, textShadow: `0 0 20px ${crowd.color}40` }}>{crowd.label}</p>
               <p style={styles.disclaimer}>Based on patterns from past year</p>
             </div>
             <button
               onClick={() => setShowReport(true)}
               style={{
-                padding: '8px 12px', borderRadius: 8, border: '1px dashed #3f3f46',
-                backgroundColor: 'transparent', color: '#a1a1aa', fontSize: 12,
-                fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6
+                padding: '10px 14px', borderRadius: 12, border: '1px dashed rgba(255,46,99,0.4)',
+                backgroundColor: 'rgba(255,46,99,0.1)', color: ACCENT, fontSize: 12,
+                fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                transition: 'all 0.2s ease'
               }}
             >
               <TrendingUp size={14} /> Report
@@ -994,14 +1232,14 @@ function VenueModal({ venue, onClose, onCheckIn, onReport, checkIns }) {
 
         {/* PILLAR 3: Vibe/Atmosphere (SEPARATE from crowd per audit) */}
         <div style={styles.infoCard}>
-          <p style={{ color: '#71717a', fontSize: 12, marginBottom: 4 }}>Vibe</p>
+          <p style={{ color: '#71717a', fontSize: 12, marginBottom: 6 }}>Vibe</p>
           <VibeBadgeWithSource vibe={venue.vibe} hasUserReports={false} />
         </div>
 
         {/* Dress Code */}
         <div style={styles.infoCard}>
-          <p style={{ color: '#71717a', fontSize: 12, marginBottom: 4 }}>Dress Code</p>
-          <p style={{ fontWeight: 700, fontSize: 18, color: dress.color, margin: 0 }}>{dress.icon} {dress.label}</p>
+          <p style={{ color: '#71717a', fontSize: 12, marginBottom: 6 }}>Dress Code</p>
+          <p style={{ fontWeight: 700, fontSize: 20, color: dress.color, margin: 0 }}>{dress.icon} {dress.label}</p>
         </div>
 
         {/* PILLAR 2: Parking (New per audit) */}
@@ -1016,28 +1254,41 @@ function VenueModal({ venue, onClose, onCheckIn, onReport, checkIns }) {
 
         {/* Happy Hour */}
         {venue.deal && (
-          <div style={{ ...styles.infoCard, backgroundColor: 'rgba(250, 204, 21, 0.1)', border: '1px solid rgba(250, 204, 21, 0.3)' }}>
-            <p style={{ color: '#facc15', fontWeight: 700, margin: 0 }}>🍹 {venue.deal}</p>
-            <p style={{ color: '#a1a1aa', fontSize: 12, margin: '4px 0 0' }}>Until {venue.dealEnd}</p>
+          <div style={{ 
+            ...styles.infoCard, 
+            background: 'linear-gradient(135deg, rgba(250,204,21,0.15) 0%, rgba(250,204,21,0.05) 100%)', 
+            border: '1px solid rgba(250,204,21,0.3)',
+            boxShadow: '0 0 20px rgba(250,204,21,0.1)'
+          }}>
+            <p style={{ color: '#facc15', fontWeight: 700, margin: 0, fontSize: 16 }}>🍹 {venue.deal}</p>
+            <p style={{ color: '#a1a1aa', fontSize: 12, margin: '6px 0 0' }}>Until {venue.dealEnd}</p>
           </div>
         )}
 
         {/* Address */}
-        <p style={{ color: '#a1a1aa', fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24 }}>
+        <p style={{ color: '#a1a1aa', fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28 }}>
           <MapPin size={16} color="#71717a" /> {venue.address}
         </p>
 
         {/* Actions */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <button 
-            style={{ ...styles.btn, backgroundColor: hasCheckedIn ? '#22c55e' : ACCENT }} 
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <InteractiveButton 
             onClick={() => !hasCheckedIn && onCheckIn(venue)}
+            disabled={hasCheckedIn}
+            style={{ 
+              background: hasCheckedIn 
+                ? 'linear-gradient(135deg, #22c55e 0%, #4ade80 100%)' 
+                : 'linear-gradient(135deg, #FF2E63 0%, #ff5f8a 100%)',
+              boxShadow: hasCheckedIn 
+                ? '0 4px 20px rgba(34,197,94,0.5)' 
+                : '0 4px 20px rgba(255,46,99,0.5)'
+            }}
           >
             <CheckCircle size={18} /> {hasCheckedIn ? 'Checked In!' : 'Check In'}
-          </button>
-          <button style={styles.btnSecondary} onClick={() => alert('Opening directions...')}>
+          </InteractiveButton>
+          <InteractiveButton variant="secondary" onClick={() => alert('Opening directions...')}>
             <Navigation size={18} /> Directions
-          </button>
+          </InteractiveButton>
         </div>
       </div>
     </div>
@@ -1126,6 +1377,7 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
   const [category, setCategory] = useState('all');
   const [activeFilters, setActiveFilters] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
 
   const toggleFilter = (filterId) => {
     setActiveFilters(prev => prev.includes(filterId) ? prev.filter(f => f !== filterId) : [...prev, filterId]);
@@ -1153,31 +1405,53 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
       {/* Header */}
       <div style={{ padding: '48px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>
+          <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, ...styles.glowText }}>
             <span>Krowd</span>
             <span style={{ color: ACCENT }}>Guide</span>
           </h1>
-          {/* Removed old tagline, keeping it clean per audit */}
         </div>
-        <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px solid #22c55e', overflow: 'hidden' }}>
+        <div style={{ 
+          width: 48, 
+          height: 48, 
+          borderRadius: '50%', 
+          border: '2px solid #22c55e', 
+          overflow: 'hidden',
+          boxShadow: '0 0 20px rgba(34,197,94,0.3)'
+        }}>
           <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80" alt="You" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
       </div>
 
       {/* Search & Filters */}
       <div style={{ padding: '0 20px', marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: 12, padding: '12px 16px', marginBottom: 12 }}>
+        <div style={{ 
+          ...styles.searchBar,
+          ...(searchFocused ? styles.searchBarFocus : {})
+        }}>
           <Search size={20} color="#71717a" />
           <input
             type="text"
             placeholder="Search venues, districts..."
             value={search}
             onChange={e => setSearch(e.target.value)}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
             style={{ flex: 1, backgroundColor: 'transparent', border: 'none', color: 'white', fontSize: 15, outline: 'none' }}
           />
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            style={{ backgroundColor: activeFilters.length > 0 ? ACCENT : '#27272a', border: 'none', borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
+            style={{ 
+              background: activeFilters.length > 0 ? `linear-gradient(135deg, ${ACCENT} 0%, #ff5f8a 100%)` : 'rgba(39,39,42,0.8)', 
+              border: 'none', 
+              borderRadius: 12, 
+              padding: '10px 14px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 6, 
+              cursor: 'pointer',
+              boxShadow: activeFilters.length > 0 ? '0 2px 12px rgba(255,46,99,0.4)' : 'none',
+              transition: 'all 0.2s ease'
+            }}
           >
             <Filter size={16} color="white" />
             {activeFilters.length > 0 && <span style={{ color: 'white', fontSize: 12, fontWeight: 700 }}>{activeFilters.length}</span>}
@@ -1207,22 +1481,30 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
 
       {/* Krowd Intelligence - Updated language per audit */}
       <div style={{ padding: '0 20px', marginBottom: 24 }}>
-        <div style={{ ...styles.card, display: 'flex', alignItems: 'center', gap: 16, padding: 16 }}>
-          <div style={{ width: 48, height: 48, borderRadius: '50%', backgroundColor: 'rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Sparkles size={24} color="#818cf8" />
+        <InteractiveCard style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 18, ...styles.neonBorder }}>
+          <div style={{ 
+            width: 52, 
+            height: 52, 
+            borderRadius: '50%', 
+            background: 'linear-gradient(135deg, rgba(99,102,241,0.3) 0%, rgba(168,85,247,0.3) 100%)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            boxShadow: '0 0 20px rgba(139,92,246,0.3)'
+          }}>
+            <Sparkles size={26} color="#a78bfa" />
           </div>
           <div>
-            <p style={{ color: ACCENT, fontSize: 11, fontWeight: 700, letterSpacing: 1, margin: 0 }}>KROWD INTELLIGENCE</p>
-            {/* Changed from "spiking" to "usually busy" per audit */}
-            <p style={{ color: 'white', fontSize: 14, margin: '4px 0 0' }}>Deep Ellum is usually busy on Friday nights. Plan ahead!</p>
+            <p style={{ color: ACCENT, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, margin: 0 }}>KROWD INTELLIGENCE</p>
+            <p style={{ color: 'white', fontSize: 14, margin: '6px 0 0' }}>Deep Ellum is usually busy on Friday nights. Plan ahead!</p>
           </div>
-        </div>
+        </InteractiveCard>
       </div>
 
       {/* Personalized Recommendations */}
       {recommendations.length > 0 && (
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px', marginBottom: 12 }}>
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Sparkles size={18} color="#818cf8" />
               <span style={{ color: '#818cf8', fontWeight: 700 }}>For You</span>
@@ -1230,17 +1512,19 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
           </div>
           <div style={{ display: 'flex', gap: 16, overflowX: 'auto', padding: '0 20px 12px' }}>
             {recommendations.map(v => (
-              <div key={v.id} onClick={() => onVenue(v)} style={{ flexShrink: 0, width: 160, cursor: 'pointer' }}>
-                <div style={{ position: 'relative', height: 100, borderRadius: 12, overflow: 'hidden', marginBottom: 8 }}>
+              <InteractiveCard key={v.id} onClick={() => onVenue(v)} style={{ flexShrink: 0, width: 170, padding: 0 }}>
+                <div style={{ position: 'relative', height: 110, borderRadius: '24px 24px 0 0', overflow: 'hidden' }}>
                   <img src={v.image} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)' }} />
-                  <div style={{ position: 'absolute', bottom: 8, left: 8 }}>
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }} />
+                  <div style={{ position: 'absolute', bottom: 10, left: 10 }}>
                     <VibeBadge vibe={v.vibe} />
                   </div>
                 </div>
-                <p style={{ fontWeight: 600, fontSize: 14, margin: 0 }}>{v.name}</p>
-                <p style={{ color: '#71717a', fontSize: 12, margin: '2px 0 0' }}>Based on your check-ins</p>
-              </div>
+                <div style={{ padding: '12px 14px' }}>
+                  <p style={{ fontWeight: 600, fontSize: 14, margin: 0 }}>{v.name}</p>
+                  <p style={{ color: '#71717a', fontSize: 12, margin: '4px 0 0' }}>Based on your check-ins</p>
+                </div>
+              </InteractiveCard>
             ))}
           </div>
         </div>
@@ -1248,8 +1532,8 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
 
       {/* Happy Hours */}
       {happyHour.length > 0 && (
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px', marginBottom: 12 }}>
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Clock size={18} color="#facc15" />
               <span style={{ color: '#facc15', fontWeight: 700 }}>Happy Hours</span>
@@ -1257,18 +1541,31 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
           </div>
           <div style={{ display: 'flex', gap: 16, overflowX: 'auto', padding: '0 20px 12px' }}>
             {happyHour.map(v => (
-              <div key={v.id} onClick={() => onVenue(v)} style={{ flexShrink: 0, width: 160, cursor: 'pointer' }}>
-                <div style={{ position: 'relative', height: 130, borderRadius: 16, overflow: 'hidden', marginBottom: 10 }}>
+              <InteractiveCard key={v.id} onClick={() => onVenue(v)} style={{ flexShrink: 0, width: 170, padding: 0 }}>
+                <div style={{ position: 'relative', height: 140, borderRadius: '24px 24px 0 0', overflow: 'hidden' }}>
                   <img src={v.image} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)' }} />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }} />
                   {v.eco && <div style={{ position: 'absolute', top: 10, left: 10 }}><EcoBadge /></div>}
-                  <span style={{ position: 'absolute', bottom: 10, right: 10, backgroundColor: ACCENT, color: 'white', padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
+                  <span style={{ 
+                    position: 'absolute', 
+                    bottom: 10, 
+                    right: 10, 
+                    background: 'linear-gradient(135deg, #FF2E63 0%, #ff5f8a 100%)', 
+                    color: 'white', 
+                    padding: '5px 10px', 
+                    borderRadius: 8, 
+                    fontSize: 11, 
+                    fontWeight: 700,
+                    boxShadow: '0 2px 10px rgba(255,46,99,0.4)'
+                  }}>
                     Until {v.dealEnd}
                   </span>
                 </div>
-                <p style={{ fontWeight: 700, fontSize: 14, margin: 0 }}>{v.name}</p>
-                <p style={{ color: '#facc15', fontSize: 12, margin: '2px 0 0' }}>{v.deal}</p>
-              </div>
+                <div style={{ padding: '12px 14px' }}>
+                  <p style={{ fontWeight: 700, fontSize: 14, margin: 0 }}>{v.name}</p>
+                  <p style={{ color: '#facc15', fontSize: 12, margin: '4px 0 0' }}>{v.deal}</p>
+                </div>
+              </InteractiveCard>
             ))}
           </div>
         </div>
@@ -1276,8 +1573,8 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
 
       {/* Usually Busy - Changed from "Trending" per audit */}
       {usuallyBusy.length > 0 && (
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px', marginBottom: 12 }}>
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontWeight: 700, fontSize: 18 }}>Usually Busy</span>
               <Info size={16} color="#71717a" />
@@ -1287,27 +1584,29 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
             {usuallyBusy.map(v => {
               const crowd = getCrowdLabel(v.crowdPercent);
               return (
-                <div key={v.id} onClick={() => onVenue(v)} style={{ flexShrink: 0, width: 240, cursor: 'pointer' }}>
-                  <div style={{ position: 'relative', height: 180, borderRadius: 16, overflow: 'hidden', marginBottom: 10 }}>
+                <InteractiveCard key={v.id} onClick={() => onVenue(v)} style={{ flexShrink: 0, width: 260, padding: 0 }}>
+                  <div style={{ position: 'relative', height: 190, borderRadius: '24px 24px 0 0', overflow: 'hidden' }}>
                     <img src={v.image} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0.2), transparent)' }} />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.2), transparent)' }} />
                     
                     {/* Crowd with "Usually" prefix per audit */}
-                    <div style={{ position: 'absolute', top: 10, right: 10 }}>
+                    <div style={{ position: 'absolute', top: 12, right: 12 }}>
                       <CrowdBadge percent={v.crowdPercent} />
                     </div>
                     
-                    <div style={{ position: 'absolute', bottom: 10, left: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ position: 'absolute', bottom: 12, left: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <VibeBadge vibe={v.vibe} />
                       <DressBadge code={v.dressCode} />
                     </div>
-                    <div style={{ position: 'absolute', bottom: 10, right: 10 }}><PriceBadge cover={v.cover} /></div>
+                    <div style={{ position: 'absolute', bottom: 12, right: 12 }}><PriceBadge cover={v.cover} /></div>
                   </div>
-                  <p style={{ fontWeight: 700, fontSize: 16, margin: 0 }}>{v.name}</p>
-                  <p style={{ color: '#71717a', fontSize: 12, margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <MapPin size={12} /> {v.distance} • {v.type}
-                  </p>
-                </div>
+                  <div style={{ padding: '14px 16px' }}>
+                    <p style={{ fontWeight: 700, fontSize: 16, margin: 0 }}>{v.name}</p>
+                    <p style={{ color: '#71717a', fontSize: 12, margin: '6px 0 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <MapPin size={12} /> {v.distance} • {v.type}
+                    </p>
+                  </div>
+                </InteractiveCard>
               );
             })}
           </div>
@@ -1316,17 +1615,25 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
 
       {/* Categories */}
       <div style={{ padding: '0 20px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           {CATEGORIES.filter(c => c.id !== 'all').map(c => (
-            <div key={c.name} onClick={() => setCategory(c.id)} style={{ ...styles.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, cursor: 'pointer' }}>
+            <InteractiveCard key={c.name} onClick={() => setCategory(c.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#27272a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ 
+                  width: 40, 
+                  height: 40, 
+                  borderRadius: 12, 
+                  background: 'linear-gradient(135deg, rgba(39,39,42,0.8) 0%, rgba(63,63,70,0.5) 100%)', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center' 
+                }}>
                   <c.icon size={18} color="#a1a1aa" />
                 </div>
                 <span style={{ fontWeight: 500 }}>{c.name}</span>
               </div>
               <ArrowUpRight size={16} color="#71717a" />
-            </div>
+            </InteractiveCard>
           ))}
         </div>
       </div>
@@ -1347,48 +1654,80 @@ function MapTab({ onDistrict }) {
   };
 
   return (
-    <div style={{ height: '100%', position: 'relative', backgroundColor: '#09090b' }}>
+    <div style={{ height: '100%', position: 'relative', background: 'linear-gradient(135deg, #09090b 0%, #0f0f12 100%)' }}>
       <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 100 100" preserveAspectRatio="none">
         <defs>
           <radialGradient id="g1" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#1a4a3a" stopOpacity="0.6" />
+            <stop offset="0%" stopColor="#1a4a3a" stopOpacity="0.4" />
             <stop offset="100%" stopColor="#09090b" />
           </radialGradient>
         </defs>
         <rect fill="url(#g1)" width="100" height="100" />
-        {[0,10,20,30,40,50,60,70,80,90,100].map(x => <line key={'v'+x} x1={x} y1="0" x2={x} y2="100" stroke="#27272a" strokeWidth="0.2" />)}
-        {[0,10,20,30,40,50,60,70,80,90,100].map(y => <line key={'h'+y} x1="0" y1={y} x2="100" y2={y} stroke="#27272a" strokeWidth="0.2" />)}
+        {[0,10,20,30,40,50,60,70,80,90,100].map(x => <line key={'v'+x} x1={x} y1="0" x2={x} y2="100" stroke="rgba(255,46,99,0.05)" strokeWidth="0.3" />)}
+        {[0,10,20,30,40,50,60,70,80,90,100].map(y => <line key={'h'+y} x1="0" y1={y} x2="100" y2={y} stroke="rgba(255,46,99,0.05)" strokeWidth="0.3" />)}
       </svg>
 
       {/* Header - REMOVED "LIVE NET" per audit */}
       <div style={{ position: 'absolute', top: 48, left: 20, right: 20, display: 'flex', justifyContent: 'space-between', zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: 'rgba(0,0,0,0.7)', padding: '8px 14px', borderRadius: 20 }}>
-          <MapPin size={16} color={ACCENT} />
-          <span style={{ fontWeight: 700, fontSize: 13 }}>Dallas Districts</span>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 10, 
+          backgroundColor: 'rgba(0,0,0,0.7)', 
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          padding: '10px 16px', 
+          borderRadius: 24,
+          border: '1px solid rgba(255,46,99,0.15)'
+        }}>
+          <MapPin size={18} color={ACCENT} />
+          <span style={{ fontWeight: 700, fontSize: 14 }}>Dallas Districts</span>
         </div>
-        <div style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <MapPin size={20} color="white" />
+        <div style={{ 
+          width: 48, 
+          height: 48, 
+          borderRadius: '50%', 
+          backgroundColor: 'rgba(0,0,0,0.7)', 
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          border: '1px solid rgba(255,255,255,0.1)'
+        }}>
+          <Navigation size={20} color="white" />
         </div>
       </div>
 
       {/* Legend - NEW per audit */}
-      <div style={{ position: 'absolute', bottom: 120, left: 20, backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, borderRadius: 12, zIndex: 10 }}>
-        <p style={{ fontSize: 11, color: '#71717a', margin: '0 0 8px', fontWeight: 600 }}>CROWD LEVELS</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#facc15' }} />
-            <span style={{ fontSize: 12, color: '#a1a1aa' }}>Usually Busy</span>
+      <div style={{ 
+        position: 'absolute', 
+        bottom: 120, 
+        left: 20, 
+        backgroundColor: 'rgba(0,0,0,0.75)', 
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        padding: 16, 
+        borderRadius: 16, 
+        zIndex: 10,
+        border: '1px solid rgba(255,255,255,0.05)'
+      }}>
+        <p style={{ fontSize: 11, color: '#a1a1aa', margin: '0 0 10px', fontWeight: 700, letterSpacing: 1 }}>CROWD LEVELS</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: '#facc15', boxShadow: '0 0 10px rgba(250,204,21,0.5)' }} />
+            <span style={{ fontSize: 13, color: '#d4d4d8' }}>Usually Busy</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#4ade80' }} />
-            <span style={{ fontSize: 12, color: '#a1a1aa' }}>Usually Moderate</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: '#4ade80', boxShadow: '0 0 10px rgba(74,222,128,0.5)' }} />
+            <span style={{ fontSize: 13, color: '#d4d4d8' }}>Usually Moderate</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#22c55e' }} />
-            <span style={{ fontSize: 12, color: '#a1a1aa' }}>Usually Chill</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: '#22c55e', boxShadow: '0 0 10px rgba(34,197,94,0.5)' }} />
+            <span style={{ fontSize: 13, color: '#d4d4d8' }}>Usually Chill</span>
           </div>
         </div>
-        <p style={{ fontSize: 10, color: '#52525b', margin: '8px 0 0', fontStyle: 'italic' }}>Based on patterns</p>
+        <p style={{ fontSize: 10, color: '#52525b', margin: '10px 0 0', fontStyle: 'italic' }}>Based on patterns</p>
       </div>
 
       {/* Districts */}
@@ -1400,18 +1739,41 @@ function MapTab({ onDistrict }) {
             onClick={() => onDistrict(d)}
             style={{ 
               position: 'absolute', left: `${d.x}%`, top: `${d.y}%`, transform: 'translate(-50%, -50%)',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer'
+              display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer',
+              transition: 'transform 0.3s ease'
             }}
           >
             <div style={{
-              width: 60, height: 60, borderRadius: '50%',
-              backgroundColor: color + '20', border: `2px solid ${color}60`,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: 6
+              width: 70, 
+              height: 70, 
+              borderRadius: '50%',
+              backgroundColor: color + '15', 
+              border: `2px solid ${color}50`,
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              marginBottom: 8,
+              boxShadow: `0 0 30px ${color}30`,
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+              transition: 'all 0.3s ease'
             }}>
-              <span style={{ fontSize: 18, fontWeight: 700, color }}>{d.venues}</span>
-              <span style={{ fontSize: 9, color: '#a1a1aa' }}>VENUES</span>
+              <span style={{ fontSize: 22, fontWeight: 700, color, textShadow: `0 0 20px ${color}` }}>{d.venues}</span>
+              <span style={{ fontSize: 9, color: '#a1a1aa', fontWeight: 600 }}>VENUES</span>
             </div>
-            <span style={{ fontSize: 9, fontWeight: 700, color, backgroundColor: 'rgba(0,0,0,0.8)', padding: '4px 8px', borderRadius: 6 }}>
+            <span style={{ 
+              fontSize: 10, 
+              fontWeight: 700, 
+              color, 
+              backgroundColor: 'rgba(0,0,0,0.85)', 
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              padding: '6px 12px', 
+              borderRadius: 8,
+              border: `1px solid ${color}30`,
+              textShadow: `0 0 10px ${color}`
+            }}>
               {d.name}
             </span>
           </div>
@@ -1430,50 +1792,73 @@ function EventsTab({ events, venues, onEvent, onDiscover }) {
 
   return (
     <div style={styles.main}>
-      <div style={{ padding: '48px 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>Events</h1>
-        <button onClick={onDiscover} style={{ ...styles.btn, padding: '10px 18px', fontSize: 14 }}>Discover</button>
+      <div style={{ padding: '48px 20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, ...styles.glowText }}>Events</h1>
+        <InteractiveButton onClick={onDiscover} style={{ padding: '12px 20px', fontSize: 14 }}>
+          Discover
+        </InteractiveButton>
       </div>
 
       {/* Events List - NO artist images per audit */}
-      <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {events.map(e => {
           const v = venues.find(x => x.id === e.venueId);
           return (
-            <div key={e.id} onClick={() => onEvent(e)} style={{ ...styles.card, display: 'flex', alignItems: 'center', gap: 14, padding: 14, cursor: 'pointer' }}>
+            <InteractiveCard key={e.id} onClick={() => onEvent(e)} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16 }}>
               {/* Event image instead of artist per audit */}
-              <div style={{ width: 72, height: 72, borderRadius: 12, backgroundColor: '#09090b', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+              <div style={{ 
+                width: 76, 
+                height: 76, 
+                borderRadius: 16, 
+                backgroundColor: '#09090b', 
+                position: 'relative', 
+                overflow: 'hidden', 
+                flexShrink: 0,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+              }}>
                 <img src={e.image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
                 <div style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ color: '#a1a1aa', fontSize: 11, fontWeight: 700 }}>{e.date === 'Tonight' ? 'TODAY' : e.date.split(',')[0]}</span>
-                  <span style={{ color: 'white', fontSize: 18, fontWeight: 700 }}>{e.time}</span>
+                  <span style={{ color: 'white', fontSize: 20, fontWeight: 700 }}>{e.time}</span>
                 </div>
               </div>
               
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
                   {/* Changed from "LIVE NOW" to "Tonight" per audit */}
                   {e.date === 'Tonight' && <TonightBadge />}
                   {v && <VibeBadge vibe={v.vibe} />}
                 </div>
                 <p style={{ fontWeight: 700, fontSize: 16, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.name}</p>
-                <p style={{ color: ACCENT, fontWeight: 600, margin: '2px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.venue}</p>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
+                <p style={{ color: ACCENT, fontWeight: 600, margin: '4px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.venue}</p>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
                   <span style={{ color: '#71717a', fontSize: 13 }}>{e.district}</span>
                   <PriceBadge cover={e.cover} />
                 </div>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                 <button 
                   onClick={(ev) => { ev.stopPropagation(); setLikes({ ...likes, [e.id]: !likes[e.id] }); }}
-                  style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: '#27272a', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{ 
+                    width: 46, 
+                    height: 46, 
+                    borderRadius: '50%', 
+                    backgroundColor: 'rgba(39,39,42,0.8)', 
+                    border: likes[e.id] ? '2px solid #ec4899' : 'none', 
+                    boxShadow: likes[e.id] ? '0 0 16px rgba(236,72,153,0.4)' : 'none',
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    transition: 'all 0.2s ease'
+                  }}
                 >
                   <Heart size={18} color={likes[e.id] ? '#ec4899' : '#71717a'} fill={likes[e.id] ? '#ec4899' : 'none'} />
                 </button>
                 <ChevronRight size={20} color="#52525b" />
               </div>
-            </div>
+            </InteractiveCard>
           );
         })}
       </div>
@@ -1495,8 +1880,9 @@ function ProfileTab({ venues, onVenue, checkIns }) {
   if (showSettings) {
     return (
       <div style={styles.main}>
+        <style>{globalStyles}</style>
         <div style={{ padding: '48px 20px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
             <button onClick={() => setShowSettings(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
               <ChevronLeft size={24} color="white" />
             </button>
@@ -1504,31 +1890,37 @@ function ProfileTab({ venues, onVenue, checkIns }) {
           </div>
 
           {/* Settings links per audit */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <button onClick={() => alert('Privacy Policy')} style={{ ...styles.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, cursor: 'pointer', width: '100%', textAlign: 'left', border: 'none' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Lock size={20} color="#a1a1aa" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <InteractiveCard onClick={() => alert('Privacy Policy')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 18 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Lock size={20} color="#818cf8" />
+                </div>
                 <span>Privacy Policy</span>
               </div>
               <ExternalLink size={18} color="#52525b" />
-            </button>
-            <button onClick={() => alert('Terms of Service')} style={{ ...styles.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, cursor: 'pointer', width: '100%', textAlign: 'left', border: 'none' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <FileText size={20} color="#a1a1aa" />
+            </InteractiveCard>
+            <InteractiveCard onClick={() => alert('Terms of Service')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 18 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <FileText size={20} color="#22c55e" />
+                </div>
                 <span>Terms of Service</span>
               </div>
               <ExternalLink size={18} color="#52525b" />
-            </button>
-            <button onClick={() => alert('About KrowdGuide')} style={{ ...styles.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, cursor: 'pointer', width: '100%', textAlign: 'left', border: 'none' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Info size={20} color="#a1a1aa" />
+            </InteractiveCard>
+            <InteractiveCard onClick={() => alert('About KrowdGuide')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 18 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,46,99,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Info size={20} color={ACCENT} />
+                </div>
                 <span>About</span>
               </div>
               <ChevronRight size={18} color="#52525b" />
-            </button>
+            </InteractiveCard>
           </div>
 
-          <p style={{ fontSize: 12, color: '#52525b', textAlign: 'center', marginTop: 32 }}>
+          <p style={{ fontSize: 12, color: '#52525b', textAlign: 'center', marginTop: 40 }}>
             KrowdGuide v1.0.0
           </p>
         </div>
@@ -1540,54 +1932,106 @@ function ProfileTab({ venues, onVenue, checkIns }) {
     <div style={styles.main}>
       {/* Header with settings icon */}
       <div style={{ padding: '48px 20px 0', display: 'flex', justifyContent: 'flex-end' }}>
-        <button onClick={() => setShowSettings(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 8 }}>
-          <Settings size={24} color="#a1a1aa" />
+        <button 
+          onClick={() => setShowSettings(true)} 
+          style={{ 
+            background: 'rgba(39,39,42,0.6)', 
+            border: 'none', 
+            cursor: 'pointer', 
+            padding: 12, 
+            borderRadius: 12,
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <Settings size={22} color="#a1a1aa" />
         </button>
       </div>
 
-      <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ width: 100, height: 100, borderRadius: '50%', border: '4px solid #22c55e', overflow: 'hidden', marginBottom: 16 }}>
+      <div style={{ padding: '0 20px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ 
+          width: 110, 
+          height: 110, 
+          borderRadius: '50%', 
+          border: '4px solid #22c55e', 
+          overflow: 'hidden', 
+          marginBottom: 18,
+          boxShadow: '0 0 30px rgba(34,197,94,0.4)'
+        }}>
           <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80" alt="You" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
-        <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Sarah Johnson</h1>
-        <p style={{ color: '#71717a', margin: '4px 0 0' }}>@sarahj</p>
+        <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, ...styles.glowText }}>Sarah Johnson</h1>
+        <p style={{ color: '#71717a', margin: '6px 0 0' }}>@sarahj</p>
       </div>
 
       {/* Stats - REMOVED Reviews and Friends per audit (features don't exist) */}
       <div style={{ padding: '0 20px', marginBottom: 32 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-          <div style={{ ...styles.card, textAlign: 'center', padding: 16 }}>
-            <CheckCircle size={20} color="#71717a" style={{ marginBottom: 8 }} />
-            <p style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{checkIns.length}</p>
-            <p style={{ color: '#71717a', fontSize: 12, margin: '4px 0 0' }}>Check-ins</p>
-          </div>
-          <div style={{ ...styles.card, textAlign: 'center', padding: 16 }}>
-            <MapPin size={20} color="#71717a" style={{ marginBottom: 8 }} />
-            <p style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{uniqueVenueIds.length}</p>
-            <p style={{ color: '#71717a', fontSize: 12, margin: '4px 0 0' }}>Venues</p>
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+          <InteractiveCard style={{ textAlign: 'center', padding: 20 }}>
+            <div style={{ 
+              width: 48, 
+              height: 48, 
+              borderRadius: 14, 
+              background: 'linear-gradient(135deg, rgba(34,197,94,0.2) 0%, rgba(34,197,94,0.1) 100%)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              margin: '0 auto 12px'
+            }}>
+              <CheckCircle size={24} color="#22c55e" />
+            </div>
+            <p style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>{checkIns.length}</p>
+            <p style={{ color: '#71717a', fontSize: 13, margin: '4px 0 0' }}>Check-ins</p>
+          </InteractiveCard>
+          <InteractiveCard style={{ textAlign: 'center', padding: 20 }}>
+            <div style={{ 
+              width: 48, 
+              height: 48, 
+              borderRadius: 14, 
+              background: 'linear-gradient(135deg, rgba(255,46,99,0.2) 0%, rgba(255,46,99,0.1) 100%)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              margin: '0 auto 12px'
+            }}>
+              <MapPin size={24} color={ACCENT} />
+            </div>
+            <p style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>{uniqueVenueIds.length}</p>
+            <p style={{ color: '#71717a', fontSize: 13, margin: '4px 0 0' }}>Venues</p>
+          </InteractiveCard>
         </div>
       </div>
 
       {/* Check-in History */}
       {recentCheckIns.length > 0 && (
         <div style={{ padding: '0 20px', marginBottom: 32 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>Recent Check-ins</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Recent Check-ins</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {recentCheckIns.slice(0, 5).map((checkIn, i) => {
               const v = venues.find(x => x.id === checkIn.venueId);
               if (!v) return null;
               return (
-                <div key={i} onClick={() => onVenue(v)} style={{ ...styles.card, display: 'flex', alignItems: 'center', gap: 12, padding: 12, cursor: 'pointer' }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
+                <InteractiveCard key={i} onClick={() => onVenue(v)} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 14 }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 14, overflow: 'hidden', flexShrink: 0 }}>
                     <img src={v.image} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.name}</p>
-                    <p style={{ color: '#71717a', fontSize: 12, margin: '2px 0 0' }}>{getTimeAgo(checkIn.time)}</p>
+                    <p style={{ color: '#71717a', fontSize: 12, margin: '4px 0 0' }}>{getTimeAgo(checkIn.time)}</p>
                   </div>
-                  <CheckCircle size={18} color="#22c55e" />
-                </div>
+                  <div style={{ 
+                    width: 36, 
+                    height: 36, 
+                    borderRadius: 10, 
+                    backgroundColor: 'rgba(34,197,94,0.2)', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center' 
+                  }}>
+                    <CheckCircle size={18} color="#22c55e" />
+                  </div>
+                </InteractiveCard>
               );
             })}
           </div>
@@ -1596,23 +2040,23 @@ function ProfileTab({ venues, onVenue, checkIns }) {
 
       {/* Favorites */}
       <div style={{ padding: '0 20px' }}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>
           {favoriteVenues.length > 0 ? 'Your Spots' : 'Suggested Spots'}
         </h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {(favoriteVenues.length > 0 ? favoriteVenues : venues.slice(0, 3)).map(v => (
-            <div key={v.id} onClick={() => onVenue(v)} style={{ ...styles.card, display: 'flex', alignItems: 'center', gap: 14, padding: 14, cursor: 'pointer' }}>
-              <div style={{ width: 56, height: 56, borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
+            <InteractiveCard key={v.id} onClick={() => onVenue(v)} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16 }}>
+              <div style={{ width: 60, height: 60, borderRadius: 14, overflow: 'hidden', flexShrink: 0 }}>
                 <img src={v.image} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
               <div style={{ flex: 1 }}>
-                <p style={{ fontWeight: 700, margin: '0 0 6px' }}>{v.name}</p>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <p style={{ fontWeight: 700, margin: '0 0 8px' }}>{v.name}</p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <VibeBadge vibe={v.vibe} />
                 </div>
               </div>
               <ChevronRight size={18} color="#52525b" />
-            </div>
+            </InteractiveCard>
           ))}
         </div>
       </div>
@@ -1671,6 +2115,9 @@ export default function App() {
 
   return (
     <div style={styles.app}>
+      {/* Inject global styles */}
+      <style>{globalStyles}</style>
+      
       {tab === 'home' && <HomeTab venues={venues} onVenue={setVenue} checkIns={checkIns} recommendations={recommendations} />}
       {tab === 'map' && <MapTab onDistrict={d => alert(`${d.name}\nUsually ${d.crowdLevel} on weekends\n${d.venues} venues`)} />}
       {tab === 'events' && <EventsTab events={EVENTS} venues={venues} onEvent={handleEvent} onDiscover={() => setDiscover(true)} />}
@@ -1697,7 +2144,12 @@ export default function App() {
           <button 
             key={t.id}
             onClick={() => setTab(t.id)}
-            style={{ ...styles.navBtn, backgroundColor: tab === t.id ? ACCENT : 'transparent', color: tab === t.id ? 'white' : '#71717a' }}
+            style={{ 
+              ...styles.navBtn, 
+              backgroundColor: tab === t.id ? ACCENT : 'transparent', 
+              color: tab === t.id ? 'white' : '#71717a',
+              ...(tab === t.id ? styles.navBtnActive : {})
+            }}
           >
             <t.Icon size={22} />
           </button>
