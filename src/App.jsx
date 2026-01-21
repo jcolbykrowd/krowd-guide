@@ -9,6 +9,212 @@ import {
 } from 'lucide-react';
 
 // ============================================================================
+// SPLASH SCREEN WITH ANIMATIONS
+// ============================================================================
+
+const splashStyles = `
+  @keyframes pulse-ring {
+    0% { transform: scale(0.8); opacity: 0; }
+    50% { opacity: 0.5; }
+    100% { transform: scale(2); opacity: 0; }
+  }
+  
+  @keyframes logo-appear {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  
+  @keyframes text-slide-up {
+    0% { transform: translateY(30px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  
+  @keyframes tagline-fade {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  
+  @keyframes dot-bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+  }
+  
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  @keyframes fade-out {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  
+  .splash-container {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #09090b 0%, #18181b 50%, #09090b 100%);
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .splash-container.fade-out {
+    animation: fade-out 0.5s ease forwards;
+  }
+  
+  .splash-logo-container {
+    position: relative;
+    margin-bottom: 24px;
+  }
+  
+  .splash-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120px;
+    height: 120px;
+    margin-top: -60px;
+    margin-left: -60px;
+    border-radius: 50%;
+    border: 2px solid #FF2E63;
+    animation: pulse-ring 2s ease-out infinite;
+  }
+  
+  .splash-ring:nth-child(2) {
+    animation-delay: 0.5s;
+  }
+  
+  .splash-ring:nth-child(3) {
+    animation-delay: 1s;
+  }
+  
+  .splash-logo {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #FF2E63 0%, #ff5f8a 100%);
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: logo-appear 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    box-shadow: 0 20px 60px rgba(255, 46, 99, 0.4);
+  }
+  
+  .splash-logo-letter {
+    font-size: 48px;
+    font-weight: 800;
+    color: white;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  
+  .splash-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: white;
+    font-family: system-ui, -apple-system, sans-serif;
+    animation: text-slide-up 0.6s ease forwards;
+    animation-delay: 0.4s;
+    opacity: 0;
+  }
+  
+  .splash-title-accent {
+    color: #FF2E63;
+  }
+  
+  .splash-tagline {
+    font-size: 14px;
+    color: #71717a;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 8px;
+    animation: tagline-fade 0.6s ease forwards;
+    animation-delay: 0.8s;
+    opacity: 0;
+  }
+  
+  .splash-loader {
+    position: absolute;
+    bottom: 80px;
+    display: flex;
+    gap: 8px;
+  }
+  
+  .splash-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #FF2E63;
+    border-radius: 50%;
+    animation: dot-bounce 1.4s ease-in-out infinite both;
+  }
+  
+  .splash-dot:nth-child(1) { animation-delay: -0.32s; }
+  .splash-dot:nth-child(2) { animation-delay: -0.16s; }
+  .splash-dot:nth-child(3) { animation-delay: 0s; }
+`;
+
+function SplashScreen({ onComplete }) {
+  const [fadeOut, setFadeOut] = useState(false);
+
+  useEffect(() => {
+    // Start fade out after 2.5 seconds
+    const fadeTimer = setTimeout(() => {
+      setFadeOut(true);
+    }, 2500);
+
+    // Complete after fade animation
+    const completeTimer = setTimeout(() => {
+      onComplete();
+    }, 3000);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(completeTimer);
+    };
+  }, [onComplete]);
+
+  return (
+    <>
+      <style>{splashStyles}</style>
+      <div className={`splash-container ${fadeOut ? 'fade-out' : ''}`}>
+        {/* Animated rings */}
+        <div className="splash-logo-container">
+          <div className="splash-ring"></div>
+          <div className="splash-ring"></div>
+          <div className="splash-ring"></div>
+          
+          {/* Logo */}
+          <div className="splash-logo">
+            <span className="splash-logo-letter">K</span>
+          </div>
+        </div>
+        
+        {/* Title */}
+        <h1 className="splash-title">
+          Krowd<span className="splash-title-accent">Guide</span>
+        </h1>
+        
+        {/* Tagline */}
+        <p className="splash-tagline">Know Before You Go</p>
+        
+        {/* Loading dots */}
+        <div className="splash-loader">
+          <div className="splash-dot"></div>
+          <div className="splash-dot"></div>
+          <div className="splash-dot"></div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ============================================================================
 // DATA - Updated per audit feedback
 // ============================================================================
 
@@ -1419,7 +1625,8 @@ function ProfileTab({ venues, onVenue, checkIns }) {
 // ============================================================================
 
 export default function App() {
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [tab, setTab] = useState('home');
   const [venues, setVenues] = useState(INITIAL_VENUES);
   const [venue, setVenue] = useState(null);
@@ -1452,7 +1659,12 @@ export default function App() {
     if (v) setVenue(v);
   };
 
-  // Show onboarding once per session
+  // Show splash screen first
+  if (showSplash) {
+    return <SplashScreen onComplete={() => { setShowSplash(false); setShowOnboarding(true); }} />;
+  }
+
+  // Then show onboarding
   if (showOnboarding) {
     return <OnboardingScreen onContinue={() => setShowOnboarding(false)} />;
   }
