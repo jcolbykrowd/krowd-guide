@@ -1,50 +1,192 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Home, Map as MapIcon, Calendar, User, MapPin, ArrowUpRight,
-  Sparkles, Flame, Clock, ChevronRight, X, Heart, Send,
-  ChevronLeft, Plus, CheckCircle, Star, Users, Navigation, 
+  Sparkles, Clock, ChevronRight, X, Heart, Send,
+  ChevronLeft, CheckCircle, Users, Navigation, 
   Wine, Music, Building, Compass, Search, Filter, Leaf,
-  Accessibility, Volume2, ChevronDown, ThumbsUp, ThumbsDown,
-  Share2, History, TrendingUp, Zap
+  Accessibility, Volume2, TrendingUp, Car, AlertTriangle,
+  Shield, Settings, FileText, Lock, ExternalLink, Info
 } from 'lucide-react';
 
 // ============================================================================
-// DATA
+// DATA - Updated per audit feedback
 // ============================================================================
 
 const ACCENT = '#FF2E63';
 
+// Vibe options (SEPARATE from crowd level per audit)
+const VIBE_OPTIONS = ['Energetic', 'Chill', 'Loud', 'Romantic', 'Lively'];
+
+// Crowd terminology (with "Usually" prefix per audit)
+const CROWD_LABELS = {
+  low: 'Usually Chill',
+  mediumLow: 'Usually Moderate', 
+  mediumHigh: 'Usually Busy',
+  high: 'Usually Packed'
+};
+
 const INITIAL_VENUES = [
-  { id: 'v1', name: 'Happiest Hour', type: 'ROOFTOP LOUNGE', district: 'Victory Park', image: 'https://images.unsplash.com/photo-1566417713940-fe7c737a9ef2?w=800&q=80', crowd: 0.9, distance: '0.3m', deal: '$5 Margaritas', dealEnd: '7pm', address: '2616 Olive St, Dallas, TX', cover: 0, badge: 'free', dressCode: 'smart', accessible: true, hearingLoop: false, eco: true, category: 'rooftop' },
-  { id: 'v2', name: 'The Rustic', type: 'LIVE MUSIC VENUE', district: 'Uptown', image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80', crowd: 0.55, distance: '0.8m', deal: '1/2 Price Wine', dealEnd: '6pm', address: '3656 Howell St, Dallas, TX', cover: 10, badge: null, dressCode: 'casual', accessible: true, hearingLoop: true, eco: false, category: 'livemusic' },
-  { id: 'v3', name: 'Stirr', type: 'SPORTS BAR', district: 'Deep Ellum', image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80', crowd: 0.75, distance: '0.5m', deal: '$4 Draft Beers', dealEnd: '8pm', address: '2803 Main St, Dallas, TX', cover: 0, badge: 'hot', dressCode: 'casual', accessible: false, hearingLoop: false, eco: false, category: 'bar' },
-  { id: 'v4', name: 'Bottled Blonde', type: 'CLUB', district: 'Deep Ellum', image: 'https://images.unsplash.com/photo-1574096079513-d82599602959?w=800&q=80', crowd: 0.95, distance: '0.6m', deal: null, dealEnd: null, address: '2505 Pacific Ave, Dallas, TX', cover: 20, badge: 'hot', dressCode: 'upscale', accessible: true, hearingLoop: false, eco: false, category: 'club' },
-  { id: 'v5', name: 'Katy Trail Ice House', type: 'BEER GARDEN', district: 'Uptown', image: 'https://images.unsplash.com/photo-1582234031666-41f237f37299?w=800&q=80', crowd: 0.35, distance: '1.2m', deal: '$3 Tacos', dealEnd: '7pm', address: '3127 Routh St, Dallas, TX', cover: 0, badge: 'new', dressCode: 'casual', accessible: true, hearingLoop: true, eco: true, category: 'bar' },
-  { id: 'v6', name: 'Midnight Rambler', type: 'SPEAKEASY', district: 'Downtown', image: 'https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=800&q=80', crowd: 0.65, distance: '0.9m', deal: null, dealEnd: null, address: '1530 Main St, Dallas, TX', cover: 0, badge: null, dressCode: 'smart', accessible: false, hearingLoop: false, eco: true, category: 'speakeasy' },
-  { id: 'v7', name: 'The Standard Pour', type: 'COCKTAIL BAR', district: 'Uptown', image: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&q=80', crowd: 0.45, distance: '0.7m', deal: '$8 Old Fashioned', dealEnd: '8pm', address: '2900 McKinney Ave, Dallas, TX', cover: 0, badge: 'free', dressCode: 'smart', accessible: true, hearingLoop: false, eco: false, category: 'bar' },
+  { 
+    id: 'v1', 
+    name: 'Happiest Hour', 
+    type: 'ROOFTOP LOUNGE', 
+    district: 'Victory Park', 
+    image: 'https://images.unsplash.com/photo-1566417713940-fe7c737a9ef2?w=800&q=80', 
+    crowdPercent: 90, 
+    distance: '0.3m', 
+    deal: '$5 Margaritas', 
+    dealEnd: '7pm', 
+    address: '2616 Olive St, Dallas, TX', 
+    cover: 0, 
+    dressCode: 'smart', 
+    accessible: true, 
+    hearingLoop: false, 
+    eco: true, 
+    category: 'rooftop',
+    vibe: 'Energetic', // Separate from crowd
+    parking: 'limited', // New: parking info
+    parkingNotes: 'Street parking available. Garage 2 blocks away.',
+    incidents: 3, // New: safety data
+    incidentTypes: ['Car break-in', 'Theft'],
+    incidentPeriod: '30 days'
+  },
+  { 
+    id: 'v2', 
+    name: 'The Rustic', 
+    type: 'LIVE MUSIC VENUE', 
+    district: 'Uptown', 
+    image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80', 
+    crowdPercent: 55, 
+    distance: '0.8m', 
+    deal: '1/2 Price Wine', 
+    dealEnd: '6pm', 
+    address: '3656 Howell St, Dallas, TX', 
+    cover: 10, 
+    dressCode: 'casual', 
+    accessible: true, 
+    hearingLoop: true, 
+    eco: false, 
+    category: 'livemusic',
+    vibe: 'Lively',
+    parking: 'available',
+    parkingNotes: 'Free lot on-site. Valet available weekends.',
+    incidents: 1,
+    incidentTypes: ['Noise complaint'],
+    incidentPeriod: '30 days'
+  },
+  { 
+    id: 'v3', 
+    name: 'Stirr', 
+    type: 'SPORTS BAR', 
+    district: 'Deep Ellum', 
+    image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80', 
+    crowdPercent: 75, 
+    distance: '0.5m', 
+    deal: '$4 Draft Beers', 
+    dealEnd: '8pm', 
+    address: '2803 Main St, Dallas, TX', 
+    cover: 0, 
+    dressCode: 'casual', 
+    accessible: false, 
+    hearingLoop: false, 
+    eco: false, 
+    category: 'bar',
+    vibe: 'Loud',
+    parking: 'limited',
+    parkingNotes: 'Street parking only. Paid lots nearby.',
+    incidents: 5,
+    incidentTypes: ['Car break-in', 'Theft', 'Assault'],
+    incidentPeriod: '30 days'
+  },
+  { 
+    id: 'v4', 
+    name: 'Bottled Blonde', 
+    type: 'CLUB', 
+    district: 'Deep Ellum', 
+    image: 'https://images.unsplash.com/photo-1574096079513-d82599602959?w=800&q=80', 
+    crowdPercent: 95, 
+    distance: '0.6m', 
+    deal: null, 
+    dealEnd: null, 
+    address: '2505 Pacific Ave, Dallas, TX', 
+    cover: 20, 
+    dressCode: 'upscale', 
+    accessible: true, 
+    hearingLoop: false, 
+    eco: false, 
+    category: 'club',
+    vibe: 'Energetic',
+    parking: 'valet',
+    parkingNotes: 'Valet only. $15-20.',
+    incidents: 7,
+    incidentTypes: ['Car break-in', 'Theft', 'Assault'],
+    incidentPeriod: '30 days'
+  },
+  { 
+    id: 'v5', 
+    name: 'Katy Trail Ice House', 
+    type: 'BEER GARDEN', 
+    district: 'Uptown', 
+    image: 'https://images.unsplash.com/photo-1582234031666-41f237f37299?w=800&q=80', 
+    crowdPercent: 35, 
+    distance: '1.2m', 
+    deal: '$3 Tacos', 
+    dealEnd: '7pm', 
+    address: '3127 Routh St, Dallas, TX', 
+    cover: 0, 
+    dressCode: 'casual', 
+    accessible: true, 
+    hearingLoop: true, 
+    eco: true, 
+    category: 'bar',
+    vibe: 'Chill',
+    parking: 'available',
+    parkingNotes: 'Large free lot on-site.',
+    incidents: 0,
+    incidentTypes: [],
+    incidentPeriod: '30 days'
+  },
+  { 
+    id: 'v6', 
+    name: 'Midnight Rambler', 
+    type: 'SPEAKEASY', 
+    district: 'Downtown', 
+    image: 'https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=800&q=80', 
+    crowdPercent: 65, 
+    distance: '0.9m', 
+    deal: null, 
+    dealEnd: null, 
+    address: '1530 Main St, Dallas, TX', 
+    cover: 0, 
+    dressCode: 'smart', 
+    accessible: false, 
+    hearingLoop: false, 
+    eco: true, 
+    category: 'speakeasy',
+    vibe: 'Romantic',
+    parking: 'garage',
+    parkingNotes: 'Hotel garage available. $10-15.',
+    incidents: 1,
+    incidentTypes: ['Theft'],
+    incidentPeriod: '30 days'
+  },
 ];
 
 const DISTRICTS = [
-  { id: 'd1', name: 'UPTOWN', venues: 12, x: 65, y: 55, color: '#4ade80' },
-  { id: 'd2', name: 'DEEP ELLUM', venues: 8, x: 50, y: 75, color: '#facc15' },
-  { id: 'd3', name: 'VICTORY PARK', venues: 5, x: 60, y: 40, color: '#4ade80' },
-  { id: 'd4', name: 'BISHOP ARTS', venues: 3, x: 55, y: 32, color: '#4ade80' },
-  { id: 'd5', name: 'LOWER GREENVILLE', venues: 6, x: 18, y: 38, color: '#c084fc' },
-  { id: 'd6', name: 'KNOX-HENDERSON', venues: 7, x: 15, y: 58, color: '#facc15' },
+  { id: 'd1', name: 'UPTOWN', venues: 12, x: 65, y: 55, crowdLevel: 'moderate' },
+  { id: 'd2', name: 'DEEP ELLUM', venues: 8, x: 50, y: 75, crowdLevel: 'busy' },
+  { id: 'd3', name: 'VICTORY PARK', venues: 5, x: 60, y: 40, crowdLevel: 'moderate' },
+  { id: 'd4', name: 'BISHOP ARTS', venues: 3, x: 55, y: 32, crowdLevel: 'chill' },
+  { id: 'd5', name: 'LOWER GREENVILLE', venues: 6, x: 18, y: 38, crowdLevel: 'busy' },
+  { id: 'd6', name: 'KNOX-HENDERSON', venues: 7, x: 15, y: 58, crowdLevel: 'moderate' },
 ];
 
+// Events - REMOVED "LIVE NOW", changed to "Tonight"
 const EVENTS = [
-  { id: 'e1', name: 'Mavs Watch Party', venue: 'Happiest Hour', venueId: 'v1', district: 'victory park', time: '8:00', date: 'Tonight', cover: 0, isLive: true, image: 'https://images.unsplash.com/photo-1504450758481-7338bbe75c8e?w=800&q=80' },
-  { id: 'e2', name: 'Josh Abbott Band', venue: 'The Rustic', venueId: 'v2', district: 'uptown', time: '9:00', date: 'Tonight', cover: 15, isLive: false, image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80' },
-  { id: 'e3', name: 'Trivia Night', venue: 'Stirr', venueId: 'v3', district: 'deep ellum', time: '7:00', date: 'Tonight', cover: 0, isLive: true, image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80' },
-  { id: 'e4', name: 'Neon Glow Party', venue: 'Bottled Blonde', venueId: 'v4', district: 'deep ellum', time: '10:00', date: 'Fri, Jan 24', cover: 25, isLive: false, image: 'https://images.unsplash.com/photo-1574391884720-bbc3740c59d1?w=800&q=80' },
-];
-
-const PERFORMERS = [
-  { id: 'p1', name: 'DJ Spinz', image: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=200&q=80', isLive: true, venue: 'Bottled Blonde' },
-  { id: 'p2', name: 'MC Thunder', image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&q=80', isLive: true, venue: 'Stirr' },
-  { id: 'p3', name: 'Lady Bass', image: 'https://images.unsplash.com/photo-1516575334481-f85287c2c82d?w=200&q=80', isLive: false, venue: 'The Rustic' },
-  { id: 'p4', name: 'Josh Abbott', image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&q=80', isLive: false, venue: 'The Rustic' },
+  { id: 'e1', name: 'Mavs Watch Party', venue: 'Happiest Hour', venueId: 'v1', district: 'Victory Park', time: '8:00 PM', date: 'Tonight', cover: 0, image: 'https://images.unsplash.com/photo-1504450758481-7338bbe75c8e?w=800&q=80' },
+  { id: 'e2', name: 'Live Country Music', venue: 'The Rustic', venueId: 'v2', district: 'Uptown', time: '9:00 PM', date: 'Tonight', cover: 15, image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80' },
+  { id: 'e3', name: 'Trivia Night', venue: 'Stirr', venueId: 'v3', district: 'Deep Ellum', time: '7:00 PM', date: 'Tonight', cover: 0, image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80' },
+  { id: 'e4', name: 'DJ Night', venue: 'Bottled Blonde', venueId: 'v4', district: 'Deep Ellum', time: '10:00 PM', date: 'Fri, Jan 24', cover: 25, image: 'https://images.unsplash.com/photo-1574391884720-bbc3740c59d1?w=800&q=80' },
 ];
 
 const CATEGORIES = [
@@ -53,7 +195,7 @@ const CATEGORIES = [
   { id: 'speakeasy', name: 'Speakeasies', icon: Wine },
   { id: 'bar', name: 'Bars', icon: Music },
   { id: 'livemusic', name: 'Live Music', icon: Music },
-  { id: 'club', name: 'Clubs', icon: Zap }
+  { id: 'club', name: 'Clubs', icon: Users }
 ];
 
 const FILTERS = [
@@ -61,18 +203,32 @@ const FILTERS = [
   { id: 'hearingLoop', label: 'Hearing Loop', icon: Volume2 },
   { id: 'eco', label: 'Eco-Friendly', icon: Leaf },
   { id: 'free', label: 'No Cover', icon: null },
-  { id: 'happyHour', label: 'Happy Hour', icon: Clock }
+  { id: 'happyHour', label: 'Happy Hour', icon: Clock },
+  { id: 'goodParking', label: 'Easy Parking', icon: Car }
 ];
 
 // ============================================================================
-// HELPERS
+// HELPERS - Updated per audit
 // ============================================================================
 
-function getVibe(crowd) {
-  if (crowd >= 0.85) return { label: 'PACKED', color: '#ef4444' };
-  if (crowd >= 0.60) return { label: 'HYPE', color: '#f97316' };
-  if (crowd >= 0.40) return { label: 'MODERATE', color: '#3b82f6' };
-  return { label: 'CHILL', color: '#22c55e' };
+// Get crowd label with "Usually" prefix (per audit requirement)
+function getCrowdLabel(percent) {
+  if (percent >= 85) return { label: 'Usually Packed', color: '#ef4444', short: 'Packed' };
+  if (percent >= 60) return { label: 'Usually Busy', color: '#f97316', short: 'Busy' };
+  if (percent >= 40) return { label: 'Usually Moderate', color: '#3b82f6', short: 'Moderate' };
+  return { label: 'Usually Chill', color: '#22c55e', short: 'Chill' };
+}
+
+// Get vibe color (separate from crowd per audit)
+function getVibeInfo(vibe) {
+  const vibes = {
+    'Energetic': { color: '#f97316', icon: '⚡' },
+    'Chill': { color: '#22c55e', icon: '😌' },
+    'Loud': { color: '#ef4444', icon: '🔊' },
+    'Romantic': { color: '#ec4899', icon: '💕' },
+    'Lively': { color: '#8b5cf6', icon: '🎉' }
+  };
+  return vibes[vibe] || vibes['Chill'];
 }
 
 function getDress(code) {
@@ -81,8 +237,24 @@ function getDress(code) {
   return { label: 'Casual', color: '#22c55e', icon: '👟' };
 }
 
+function getParkingInfo(parking) {
+  const info = {
+    'available': { label: 'Usually Available', color: '#22c55e', icon: '✓' },
+    'limited': { label: 'Usually Limited', color: '#f97316', icon: '!' },
+    'valet': { label: 'Valet Only', color: '#8b5cf6', icon: '🚗' },
+    'garage': { label: 'Garage Nearby', color: '#3b82f6', icon: 'P' }
+  };
+  return info[parking] || info['limited'];
+}
+
+function getIncidentLevel(count) {
+  if (count === 0) return { label: 'No recent incidents', color: '#22c55e' };
+  if (count <= 2) return { label: `${count} incidents`, color: '#f97316' };
+  return { label: `${count} incidents`, color: '#ef4444' };
+}
+
 function shareVenue(venue) {
-  const text = `Check out ${venue.name} on KrowdGuide! Currently ${getVibe(venue.crowd).label.toLowerCase()} vibes.`;
+  const text = `Check out ${venue.name} on KrowdGuide! ${getCrowdLabel(venue.crowdPercent).label} on weekend nights.`;
   if (navigator.share) {
     navigator.share({ title: venue.name, text, url: window.location.href });
   } else {
@@ -132,7 +304,7 @@ const styles = {
     borderRadius: 20,
     backgroundColor: 'rgba(0,0,0,0.7)',
     fontSize: 12,
-    fontWeight: 700
+    fontWeight: 600
   },
   btn: {
     backgroundColor: ACCENT,
@@ -159,24 +331,6 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8
-  },
-  searchBar: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#18181b',
-    border: '1px solid #27272a',
-    borderRadius: 12,
-    padding: '12px 16px',
-    marginBottom: 12
-  },
-  searchInput: {
-    flex: 1,
-    backgroundColor: 'transparent',
-    border: 'none',
-    color: 'white',
-    fontSize: 15,
-    outline: 'none'
   },
   filterChip: {
     display: 'inline-flex',
@@ -238,64 +392,143 @@ const styles = {
     maxWidth: 500,
     maxHeight: '90vh',
     overflowY: 'auto'
+  },
+  disclaimer: {
+    fontSize: 11,
+    color: '#71717a',
+    fontStyle: 'italic',
+    marginTop: 4
+  },
+  infoCard: {
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: '#27272a',
+    marginBottom: 12
   }
 };
 
 // ============================================================================
-// BADGE COMPONENTS
+// ONBOARDING SCREEN (New per audit - single screen)
 // ============================================================================
 
-function VenueBadge({ badge }) {
-  if (!badge) return null;
-  const colors = { free: '#22c55e', new: ACCENT, hot: '#f97316' };
+function OnboardingScreen({ onContinue }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => setVisible(true), 100);
+  }, []);
+
   return (
-    <span style={{
-      position: 'absolute',
-      top: 12,
-      left: 12,
-      padding: '5px 10px',
-      borderRadius: 8,
-      fontSize: 11,
-      fontWeight: 700,
-      textTransform: 'uppercase',
-      color: 'white',
-      backgroundColor: colors[badge]
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      backgroundColor: '#09090b',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 32,
+      zIndex: 50,
+      opacity: visible ? 1 : 0,
+      transition: 'opacity 0.5s ease'
     }}>
-      {badge}
-    </span>
+      {/* Logo */}
+      <h1 style={{ fontSize: 36, fontWeight: 700, marginBottom: 8 }}>
+        <span style={{ color: 'white' }}>Krowd</span>
+        <span style={{ color: ACCENT }}>Guide</span>
+      </h1>
+      
+      {/* Tagline per audit */}
+      <p style={{ fontSize: 24, fontWeight: 600, color: 'white', marginBottom: 8, textAlign: 'center' }}>
+        Is it a good time to go?
+      </p>
+      
+      {/* Subtitle per audit */}
+      <p style={{ fontSize: 16, color: '#a1a1aa', marginBottom: 40, textAlign: 'center' }}>
+        Enable location to find what's near you.
+      </p>
+
+      {/* Buttons per audit */}
+      <div style={{ width: '100%', maxWidth: 280, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <button 
+          onClick={() => {
+            if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(
+                () => onContinue(),
+                () => onContinue(),
+                { timeout: 5000 }
+              );
+            } else {
+              onContinue();
+            }
+          }}
+          style={styles.btn}
+        >
+          <MapPin size={20} /> Enable Location
+        </button>
+        <button 
+          onClick={onContinue}
+          style={{ ...styles.btnSecondary, backgroundColor: 'transparent', border: 'none' }}
+        >
+          Skip
+        </button>
+      </div>
+
+      {/* Privacy note */}
+      <p style={{ fontSize: 12, color: '#52525b', marginTop: 32, textAlign: 'center' }}>
+        We only track location at venues. Never your home or work.
+      </p>
+    </div>
   );
 }
 
-function EcoBadge() {
+// ============================================================================
+// BADGE COMPONENTS - Updated per audit
+// ============================================================================
+
+// Crowd badge with "Usually" prefix and "based on patterns" disclaimer
+function CrowdBadge({ percent, showDisclaimer = false }) {
+  const crowd = getCrowdLabel(percent);
   return (
-    <span style={{
-      ...styles.badge,
-      backgroundColor: 'rgba(34, 197, 94, 0.2)',
-      border: '1px solid rgba(34, 197, 94, 0.5)'
-    }}>
-      <Leaf size={12} color="#22c55e" />
-      <span style={{ color: '#22c55e' }}>Eco</span>
-    </span>
+    <div>
+      <span style={{ ...styles.badge }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: crowd.color }} />
+        <span style={{ color: crowd.color }}>Usually {percent}%</span>
+      </span>
+      {showDisclaimer && (
+        <p style={styles.disclaimer}>Based on patterns</p>
+      )}
+    </div>
   );
 }
 
-function AccessibleBadge({ wheelchair, hearing }) {
-  if (!wheelchair && !hearing) return null;
-  return (
-    <span style={{ ...styles.badge, gap: 4 }}>
-      {wheelchair && <Accessibility size={14} color="#60a5fa" />}
-      {hearing && <Volume2 size={14} color="#c084fc" />}
-    </span>
-  );
-}
-
-function VibeBadge({ crowd }) {
-  const v = getVibe(crowd);
+// Vibe badge (SEPARATE from crowd per audit)
+function VibeBadge({ vibe }) {
+  const info = getVibeInfo(vibe);
   return (
     <span style={{ ...styles.badge }}>
-      <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: v.color }} />
-      <span style={{ color: v.color }}>{v.label}</span>
+      <span>{info.icon}</span>
+      <span style={{ color: info.color }}>{vibe}</span>
     </span>
+  );
+}
+
+// Vibe badge with source (per audit)
+function VibeBadgeWithSource({ vibe, hasUserReports = false, reportCount = 0 }) {
+  const info = getVibeInfo(vibe);
+  return (
+    <div>
+      <span style={{ ...styles.badge }}>
+        <span>{info.icon}</span>
+        <span style={{ color: info.color }}>{vibe}</span>
+      </span>
+      <p style={styles.disclaimer}>
+        {hasUserReports 
+          ? `Based on ${reportCount} reports`
+          : 'Based on reviews'
+        }
+      </p>
+    </div>
   );
 }
 
@@ -323,23 +556,79 @@ function PriceBadge({ cover }) {
   );
 }
 
-function LiveBadge() {
+// Tonight badge (replaces "LIVE NOW" per audit)
+function TonightBadge() {
   return (
-    <span style={{ ...styles.badge, backgroundColor: 'rgba(24,24,27,0.9)' }}>
-      <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#22c55e' }} />
-      <span style={{ color: 'white' }}>LIVE NOW</span>
+    <span style={{ ...styles.badge, backgroundColor: 'rgba(34, 197, 94, 0.2)', border: '1px solid rgba(34, 197, 94, 0.5)' }}>
+      <Clock size={12} color="#22c55e" />
+      <span style={{ color: '#22c55e' }}>Tonight</span>
     </span>
   );
 }
 
-function LoadBadge({ load }) {
-  const pct = Math.round(load * 100);
-  const color = load >= 0.8 ? '#ef4444' : load >= 0.5 ? '#facc15' : '#22c55e';
+function EcoBadge() {
   return (
-    <span style={{ ...styles.badge }}>
-      <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: color }} />
-      <span style={{ color: 'white' }}>{pct}%</span>
+    <span style={{
+      ...styles.badge,
+      backgroundColor: 'rgba(34, 197, 94, 0.2)',
+      border: '1px solid rgba(34, 197, 94, 0.5)'
+    }}>
+      <Leaf size={12} color="#22c55e" />
+      <span style={{ color: '#22c55e' }}>Eco</span>
     </span>
+  );
+}
+
+function AccessibleBadge({ wheelchair, hearing }) {
+  if (!wheelchair && !hearing) return null;
+  return (
+    <span style={{ ...styles.badge, gap: 4 }}>
+      {wheelchair && <Accessibility size={14} color="#60a5fa" />}
+      {hearing && <Volume2 size={14} color="#c084fc" />}
+    </span>
+  );
+}
+
+// ============================================================================
+// PARKING INFO CARD (New per audit - Pillar #2)
+// ============================================================================
+
+function ParkingCard({ parking, notes }) {
+  const info = getParkingInfo(parking);
+  return (
+    <div style={styles.infoCard}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <Car size={18} color={info.color} />
+        <span style={{ fontWeight: 700, color: info.color }}>Parking: {info.label}</span>
+      </div>
+      <p style={{ fontSize: 13, color: '#a1a1aa', margin: 0 }}>{notes}</p>
+    </div>
+  );
+}
+
+// ============================================================================
+// SAFETY INFO CARD (New per audit - Pillar #4)
+// ============================================================================
+
+function SafetyCard({ incidents, types, period }) {
+  const level = getIncidentLevel(incidents);
+  return (
+    <div style={styles.infoCard}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <Shield size={18} color={level.color} />
+        <span style={{ fontWeight: 700, color: level.color }}>
+          {incidents === 0 ? 'No incidents reported' : `${incidents} incidents in past ${period}`}
+        </span>
+      </div>
+      {types.length > 0 && (
+        <p style={{ fontSize: 13, color: '#a1a1aa', margin: '0 0 8px' }}>
+          {types.join(', ')}
+        </p>
+      )}
+      <p style={styles.disclaimer}>
+        Data from Dallas Police Department via Dallas OpenData. Historical data - conditions may change.
+      </p>
+    </div>
   );
 }
 
@@ -351,19 +640,12 @@ function CrowdReportModal({ venue, onClose, onReport }) {
   const [selected, setSelected] = useState(null);
   
   const levels = [
-    { id: 'empty', label: 'Empty', emoji: '🪹', value: 0.2 },
-    { id: 'chill', label: 'Chill', emoji: '😌', value: 0.35 },
-    { id: 'moderate', label: 'Moderate', emoji: '👍', value: 0.5 },
-    { id: 'busy', label: 'Busy', emoji: '🔥', value: 0.7 },
-    { id: 'packed', label: 'Packed', emoji: '🤯', value: 0.95 }
+    { id: 'empty', label: 'Empty', emoji: '🪹', value: 20 },
+    { id: 'chill', label: 'Chill', emoji: '😌', value: 35 },
+    { id: 'moderate', label: 'Moderate', emoji: '👍', value: 50 },
+    { id: 'busy', label: 'Busy', emoji: '🔥', value: 75 },
+    { id: 'packed', label: 'Packed', emoji: '🤯', value: 95 }
   ];
-
-  const handleSubmit = () => {
-    if (selected) {
-      onReport(venue.id, selected.value);
-      onClose();
-    }
-  };
 
   return (
     <div style={styles.modal} onClick={onClose}>
@@ -371,7 +653,7 @@ function CrowdReportModal({ venue, onClose, onReport }) {
         <div style={{ width: 48, height: 5, backgroundColor: '#3f3f46', borderRadius: 10, margin: '0 auto 20px' }} />
         
         <h3 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px', textAlign: 'center' }}>
-          How's {venue.name}?
+          How's {venue.name} right now?
         </h3>
         <p style={{ color: '#71717a', fontSize: 14, margin: '0 0 24px', textAlign: 'center' }}>
           Help others know before they go
@@ -404,13 +686,9 @@ function CrowdReportModal({ venue, onClose, onReport }) {
         </div>
 
         <button
-          onClick={handleSubmit}
+          onClick={() => { if (selected) { onReport(venue.id, selected.value); onClose(); } }}
           disabled={!selected}
-          style={{
-            ...styles.btn,
-            width: '100%',
-            opacity: selected ? 1 : 0.5
-          }}
+          style={{ ...styles.btn, width: '100%', opacity: selected ? 1 : 0.5 }}
         >
           Submit Report
         </button>
@@ -420,7 +698,7 @@ function CrowdReportModal({ venue, onClose, onReport }) {
 }
 
 // ============================================================================
-// VENUE MODAL
+// VENUE MODAL - Updated per audit with all 4 pillars
 // ============================================================================
 
 function VenueModal({ venue, onClose, onCheckIn, onReport, checkIns }) {
@@ -429,7 +707,7 @@ function VenueModal({ venue, onClose, onCheckIn, onReport, checkIns }) {
   
   if (!venue) return null;
   
-  const vibe = getVibe(venue.crowd);
+  const crowd = getCrowdLabel(venue.crowdPercent);
   const dress = getDress(venue.dressCode);
   const hasCheckedIn = checkIns.some(c => c.venueId === venue.id);
 
@@ -443,19 +721,9 @@ function VenueModal({ venue, onClose, onCheckIn, onReport, checkIns }) {
         <button 
           onClick={onClose}
           style={{
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            width: 44,
-            height: 44,
-            borderRadius: '50%',
-            backgroundColor: '#27272a',
-            border: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 10
+            position: 'absolute', top: 16, right: 16, width: 44, height: 44,
+            borderRadius: '50%', backgroundColor: '#27272a', border: 'none',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10
           }}
         >
           <X size={20} color="white" />
@@ -463,30 +731,26 @@ function VenueModal({ venue, onClose, onCheckIn, onReport, checkIns }) {
 
         <div style={{ width: 48, height: 5, backgroundColor: '#3f3f46', borderRadius: 10, margin: '0 auto 20px' }} />
 
-        {/* Image */}
+        {/* Image with crowd overlay */}
         <div style={{ position: 'relative', height: 200, borderRadius: 16, overflow: 'hidden', marginBottom: 20 }}>
           <img src={venue.image} alt={venue.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }} />
+          
+          {/* Crowd percentage with "Usually" prefix per audit */}
           <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <LoadBadge load={venue.crowd} />
-            <VibeBadge crowd={venue.crowd} />
+            <CrowdBadge percent={venue.crowdPercent} />
             {venue.eco && <EcoBadge />}
           </div>
+          
           <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }}>
-            <button 
-              onClick={() => shareVenue(venue)}
-              style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: 'rgba(39,39,42,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-            >
-              <Share2 size={18} color="white" />
+            <button onClick={() => shareVenue(venue)} style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: 'rgba(39,39,42,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <Send size={18} color="white" />
             </button>
-            <button 
-              onClick={() => setLiked(!liked)}
-              style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: 'rgba(39,39,42,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-            >
+            <button onClick={() => setLiked(!liked)} style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: 'rgba(39,39,42,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               <Heart size={18} color={liked ? '#ec4899' : 'white'} fill={liked ? '#ec4899' : 'none'} />
             </button>
           </div>
-          {/* Accessibility badges */}
+          
           {(venue.accessible || venue.hearingLoop) && (
             <div style={{ position: 'absolute', bottom: 12, left: 12 }}>
               <AccessibleBadge wheelchair={venue.accessible} hearing={venue.hearingLoop} />
@@ -501,47 +765,54 @@ function VenueModal({ venue, onClose, onCheckIn, onReport, checkIns }) {
         </div>
         <p style={{ color: '#a1a1aa', fontSize: 14, marginBottom: 20 }}>{venue.type} • {venue.district}</p>
 
-        {/* Info Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
-          <div style={{ padding: 16, borderRadius: 12, backgroundColor: '#27272a' }}>
-            <p style={{ color: '#71717a', fontSize: 12, marginBottom: 4 }}>Vibe</p>
-            <p style={{ fontWeight: 700, fontSize: 18, color: vibe.color, margin: 0 }}>{vibe.label}</p>
-          </div>
-          <div style={{ padding: 16, borderRadius: 12, backgroundColor: '#27272a' }}>
-            <p style={{ color: '#71717a', fontSize: 12, marginBottom: 4 }}>Dress Code</p>
-            <p style={{ fontWeight: 700, fontSize: 18, color: dress.color, margin: 0 }}>{dress.icon} {dress.label}</p>
+        {/* PILLAR 1: Crowd Level (with proper terminology per audit) */}
+        <div style={styles.infoCard}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <p style={{ color: '#71717a', fontSize: 12, marginBottom: 4 }}>Crowd Level</p>
+              <p style={{ fontWeight: 700, fontSize: 18, color: crowd.color, margin: 0 }}>{crowd.label}</p>
+              <p style={styles.disclaimer}>Based on patterns from past year</p>
+            </div>
+            <button
+              onClick={() => setShowReport(true)}
+              style={{
+                padding: '8px 12px', borderRadius: 8, border: '1px dashed #3f3f46',
+                backgroundColor: 'transparent', color: '#a1a1aa', fontSize: 12,
+                fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6
+              }}
+            >
+              <TrendingUp size={14} /> Report
+            </button>
           </div>
         </div>
 
-        {/* Report Crowd Button */}
-        <button
-          onClick={() => setShowReport(true)}
-          style={{
-            width: '100%',
-            padding: '12px 16px',
-            borderRadius: 12,
-            border: '1px dashed #3f3f46',
-            backgroundColor: 'transparent',
-            color: '#a1a1aa',
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            marginBottom: 20
-          }}
-        >
-          <TrendingUp size={18} />
-          Report Current Crowd
-        </button>
+        {/* PILLAR 3: Vibe/Atmosphere (SEPARATE from crowd per audit) */}
+        <div style={styles.infoCard}>
+          <p style={{ color: '#71717a', fontSize: 12, marginBottom: 4 }}>Vibe</p>
+          <VibeBadgeWithSource vibe={venue.vibe} hasUserReports={false} />
+        </div>
+
+        {/* Dress Code */}
+        <div style={styles.infoCard}>
+          <p style={{ color: '#71717a', fontSize: 12, marginBottom: 4 }}>Dress Code</p>
+          <p style={{ fontWeight: 700, fontSize: 18, color: dress.color, margin: 0 }}>{dress.icon} {dress.label}</p>
+        </div>
+
+        {/* PILLAR 2: Parking (New per audit) */}
+        <ParkingCard parking={venue.parking} notes={venue.parkingNotes} />
+
+        {/* PILLAR 4: Safety (New per audit) */}
+        <SafetyCard 
+          incidents={venue.incidents} 
+          types={venue.incidentTypes} 
+          period={venue.incidentPeriod} 
+        />
 
         {/* Happy Hour */}
         {venue.deal && (
-          <div style={{ backgroundColor: '#27272a', borderRadius: 12, padding: 16, marginBottom: 20 }}>
+          <div style={{ ...styles.infoCard, backgroundColor: 'rgba(250, 204, 21, 0.1)', border: '1px solid rgba(250, 204, 21, 0.3)' }}>
             <p style={{ color: '#facc15', fontWeight: 700, margin: 0 }}>🍹 {venue.deal}</p>
-            <p style={{ color: '#71717a', fontSize: 12, margin: '4px 0 0' }}>Until {venue.dealEnd}</p>
+            <p style={{ color: '#a1a1aa', fontSize: 12, margin: '4px 0 0' }}>Until {venue.dealEnd}</p>
           </div>
         )}
 
@@ -553,10 +824,7 @@ function VenueModal({ venue, onClose, onCheckIn, onReport, checkIns }) {
         {/* Actions */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <button 
-            style={{
-              ...styles.btn,
-              backgroundColor: hasCheckedIn ? '#22c55e' : ACCENT
-            }} 
+            style={{ ...styles.btn, backgroundColor: hasCheckedIn ? '#22c55e' : ACCENT }} 
             onClick={() => !hasCheckedIn && onCheckIn(venue)}
           >
             <CheckCircle size={18} /> {hasCheckedIn ? 'Checked In!' : 'Check In'}
@@ -571,7 +839,7 @@ function VenueModal({ venue, onClose, onCheckIn, onReport, checkIns }) {
 }
 
 // ============================================================================
-// DISCOVER MODE
+// DISCOVER MODE - Updated per audit (no "LIVE NOW", use "Tonight")
 // ============================================================================
 
 function DiscoverMode({ events, venues, onClose }) {
@@ -590,26 +858,30 @@ function DiscoverMode({ events, venues, onClose }) {
 
       <div style={{ position: 'absolute', top: 48, left: 20, right: 20, display: 'flex', justifyContent: 'space-between', zIndex: 10 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {event.isLive && <LiveBadge />}
-          {venue && <VibeBadge crowd={venue.crowd} />}
+          {event.date === 'Tonight' && <TonightBadge />}
+          {venue && <VibeBadge vibe={venue.vibe} />}
           {venue && <DressBadge code={venue.dressCode} />}
-          {venue?.eco && <EcoBadge />}
         </div>
         <div style={{ backgroundColor: 'rgba(24,24,27,0.8)', borderRadius: 12, padding: '12px 16px', textAlign: 'center' }}>
-          <p style={{ color: '#a1a1aa', fontSize: 11, margin: 0 }}>TODAY</p>
+          <p style={{ color: '#a1a1aa', fontSize: 11, margin: 0 }}>{event.date}</p>
           <p style={{ color: 'white', fontSize: 24, fontWeight: 700, margin: 0 }}>{event.time}</p>
         </div>
       </div>
 
       <div style={{ position: 'absolute', bottom: 140, left: 20, right: 20, zIndex: 10 }}>
         <h1 style={{ fontSize: 36, fontWeight: 700, margin: '0 0 12px' }}>{event.name}</h1>
-        <p style={{ color: ACCENT, fontSize: 18, fontWeight: 700, margin: '0 0 4px' }}>{event.date}, {event.time}</p>
-        <p style={{ color: '#d4d4d8', fontSize: 18, margin: 0 }}>{event.venue}</p>
+        <p style={{ color: ACCENT, fontSize: 18, fontWeight: 700, margin: '0 0 4px' }}>{event.venue}</p>
+        <p style={{ color: '#d4d4d8', fontSize: 16, margin: 0 }}>{event.district}</p>
+        {venue && (
+          <p style={{ color: '#71717a', fontSize: 14, margin: '8px 0 0' }}>
+            {getCrowdLabel(venue.crowdPercent).label} on {event.date === 'Tonight' ? 'weekend nights' : 'this day'}
+          </p>
+        )}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24 }}>
           <PriceBadge cover={event.cover} />
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => venue && shareVenue(venue)} style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: 'rgba(39,39,42,0.9)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Share2 size={18} color="white" />
+              <Send size={18} color="white" />
             </button>
             <button onClick={() => setLikes({ ...likes, [event.id]: !likes[event.id] })} style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: 'rgba(39,39,42,0.9)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Heart size={18} color={likes[event.id] ? '#ec4899' : 'white'} fill={likes[event.id] ? '#ec4899' : 'none'} />
@@ -640,7 +912,7 @@ function DiscoverMode({ events, venues, onClose }) {
 }
 
 // ============================================================================
-// HOME TAB
+// HOME TAB - Updated per audit
 // ============================================================================
 
 function HomeTab({ venues, onVenue, checkIns, recommendations }) {
@@ -650,32 +922,25 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
   const [showFilters, setShowFilters] = useState(false);
 
   const toggleFilter = (filterId) => {
-    setActiveFilters(prev => 
-      prev.includes(filterId) ? prev.filter(f => f !== filterId) : [...prev, filterId]
-    );
+    setActiveFilters(prev => prev.includes(filterId) ? prev.filter(f => f !== filterId) : [...prev, filterId]);
   };
 
   const filteredVenues = useMemo(() => {
     return venues.filter(v => {
-      // Search
-      if (search && !v.name.toLowerCase().includes(search.toLowerCase()) && 
-          !v.district.toLowerCase().includes(search.toLowerCase())) {
-        return false;
-      }
-      // Category
+      if (search && !v.name.toLowerCase().includes(search.toLowerCase()) && !v.district.toLowerCase().includes(search.toLowerCase())) return false;
       if (category !== 'all' && v.category !== category) return false;
-      // Filters
       if (activeFilters.includes('accessible') && !v.accessible) return false;
       if (activeFilters.includes('hearingLoop') && !v.hearingLoop) return false;
       if (activeFilters.includes('eco') && !v.eco) return false;
       if (activeFilters.includes('free') && v.cover > 0) return false;
       if (activeFilters.includes('happyHour') && !v.deal) return false;
+      if (activeFilters.includes('goodParking') && v.parking !== 'available') return false;
       return true;
     });
   }, [venues, search, category, activeFilters]);
 
   const happyHour = filteredVenues.filter(v => v.deal);
-  const trending = filteredVenues.filter(v => v.crowd >= 0.5);
+  const usuallyBusy = filteredVenues.filter(v => v.crowdPercent >= 50);
 
   return (
     <div style={styles.main}>
@@ -686,56 +951,37 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
             <span>Krowd</span>
             <span style={{ color: ACCENT }}>Guide</span>
           </h1>
-          <p style={{ color: '#71717a', fontSize: 11, letterSpacing: 2, margin: '4px 0 0' }}>KNOW BEFORE YOU GO</p>
+          {/* Removed old tagline, keeping it clean per audit */}
         </div>
         <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px solid #22c55e', overflow: 'hidden' }}>
-          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80" alt="You" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80" alt="You" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
       </div>
 
       {/* Search & Filters */}
       <div style={{ padding: '0 20px', marginBottom: 16 }}>
-        <div style={styles.searchBar}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: 12, padding: '12px 16px', marginBottom: 12 }}>
           <Search size={20} color="#71717a" />
           <input
             type="text"
             placeholder="Search venues, districts..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={styles.searchInput}
+            style={{ flex: 1, backgroundColor: 'transparent', border: 'none', color: 'white', fontSize: 15, outline: 'none' }}
           />
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            style={{ 
-              backgroundColor: activeFilters.length > 0 ? ACCENT : '#27272a', 
-              border: 'none', 
-              borderRadius: 8, 
-              padding: '8px 12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              cursor: 'pointer'
-            }}
+            style={{ backgroundColor: activeFilters.length > 0 ? ACCENT : '#27272a', border: 'none', borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
           >
             <Filter size={16} color="white" />
-            {activeFilters.length > 0 && (
-              <span style={{ color: 'white', fontSize: 12, fontWeight: 700 }}>{activeFilters.length}</span>
-            )}
+            {activeFilters.length > 0 && <span style={{ color: 'white', fontSize: 12, fontWeight: 700 }}>{activeFilters.length}</span>}
           </button>
         </div>
 
-        {/* Filter Chips */}
         {showFilters && (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
             {FILTERS.map(f => (
-              <button
-                key={f.id}
-                onClick={() => toggleFilter(f.id)}
-                style={{
-                  ...styles.filterChip,
-                  ...(activeFilters.includes(f.id) ? styles.filterChipActive : {})
-                }}
-              >
+              <button key={f.id} onClick={() => toggleFilter(f.id)} style={{ ...styles.filterChip, ...(activeFilters.includes(f.id) ? styles.filterChipActive : {}) }}>
                 {f.icon && <f.icon size={14} />}
                 {f.label}
               </button>
@@ -743,17 +989,9 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
           </div>
         )}
 
-        {/* Categories */}
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
           {CATEGORIES.map(c => (
-            <button
-              key={c.id}
-              onClick={() => setCategory(c.id)}
-              style={{
-                ...styles.filterChip,
-                ...(category === c.id ? styles.filterChipActive : {})
-              }}
-            >
+            <button key={c.id} onClick={() => setCategory(c.id)} style={{ ...styles.filterChip, ...(category === c.id ? styles.filterChipActive : {}) }}>
               <c.icon size={14} />
               {c.name}
             </button>
@@ -761,9 +999,23 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
         </div>
       </div>
 
-      {/* Recommendations (if has check-ins) */}
+      {/* Krowd Intelligence - Updated language per audit */}
+      <div style={{ padding: '0 20px', marginBottom: 24 }}>
+        <div style={{ ...styles.card, display: 'flex', alignItems: 'center', gap: 16, padding: 16 }}>
+          <div style={{ width: 48, height: 48, borderRadius: '50%', backgroundColor: 'rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Sparkles size={24} color="#818cf8" />
+          </div>
+          <div>
+            <p style={{ color: ACCENT, fontSize: 11, fontWeight: 700, letterSpacing: 1, margin: 0 }}>KROWD INTELLIGENCE</p>
+            {/* Changed from "spiking" to "usually busy" per audit */}
+            <p style={{ color: 'white', fontSize: 14, margin: '4px 0 0' }}>Deep Ellum is usually busy on Friday nights. Plan ahead!</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Personalized Recommendations */}
       {recommendations.length > 0 && (
-        <div style={{ marginBottom: 32 }}>
+        <div style={{ marginBottom: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px', marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Sparkles size={18} color="#818cf8" />
@@ -777,7 +1029,7 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
                   <img src={v.image} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)' }} />
                   <div style={{ position: 'absolute', bottom: 8, left: 8 }}>
-                    <VibeBadge crowd={v.crowd} />
+                    <VibeBadge vibe={v.vibe} />
                   </div>
                 </div>
                 <p style={{ fontWeight: 600, fontSize: 14, margin: 0 }}>{v.name}</p>
@@ -790,13 +1042,12 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
 
       {/* Happy Hours */}
       {happyHour.length > 0 && (
-        <div style={{ marginBottom: 32 }}>
+        <div style={{ marginBottom: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px', marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Clock size={18} color="#facc15" />
-              <span style={{ color: '#facc15', fontWeight: 700 }}>Happy Hours Active</span>
+              <span style={{ color: '#facc15', fontWeight: 700 }}>Happy Hours</span>
             </div>
-            <span style={{ color: '#71717a', fontSize: 14 }}>View all</span>
           </div>
           <div style={{ display: 'flex', gap: 16, overflowX: 'auto', padding: '0 20px 12px' }}>
             {happyHour.map(v => (
@@ -804,78 +1055,91 @@ function HomeTab({ venues, onVenue, checkIns, recommendations }) {
                 <div style={{ position: 'relative', height: 130, borderRadius: 16, overflow: 'hidden', marginBottom: 10 }}>
                   <img src={v.image} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)' }} />
-                  <VenueBadge badge={v.badge} />
-                  {v.eco && <div style={{ position: 'absolute', top: 12, right: 12 }}><EcoBadge /></div>}
+                  {v.eco && <div style={{ position: 'absolute', top: 10, left: 10 }}><EcoBadge /></div>}
                   <span style={{ position: 'absolute', bottom: 10, right: 10, backgroundColor: ACCENT, color: 'white', padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
                     Until {v.dealEnd}
                   </span>
                 </div>
                 <p style={{ fontWeight: 700, fontSize: 14, margin: 0 }}>{v.name}</p>
-                <p style={{ color: '#71717a', fontSize: 12, margin: '2px 0 0' }}>{v.deal}</p>
+                <p style={{ color: '#facc15', fontSize: 12, margin: '2px 0 0' }}>{v.deal}</p>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Trending */}
-      {trending.length > 0 && (
-        <div style={{ marginBottom: 32 }}>
+      {/* Usually Busy - Changed from "Trending" per audit */}
+      {usuallyBusy.length > 0 && (
+        <div style={{ marginBottom: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px', marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontWeight: 700, fontSize: 18 }}>Trending</span>
-              <Flame size={18} color="#f97316" />
+              <span style={{ fontWeight: 700, fontSize: 18 }}>Usually Busy</span>
+              <Info size={16} color="#71717a" />
             </div>
-            <span style={{ color: '#71717a', fontSize: 14 }}>View all</span>
           </div>
           <div style={{ display: 'flex', gap: 16, overflowX: 'auto', padding: '0 20px 12px' }}>
-            {trending.map(v => (
-              <div key={v.id} onClick={() => onVenue(v)} style={{ flexShrink: 0, width: 240, cursor: 'pointer' }}>
-                <div style={{ position: 'relative', height: 180, borderRadius: 16, overflow: 'hidden', marginBottom: 10 }}>
-                  <img src={v.image} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0.2), transparent)' }} />
-                  <VenueBadge badge={v.badge} />
-                  <div style={{ position: 'absolute', top: 10, right: 10 }}><LoadBadge load={v.crowd} /></div>
-                  <div style={{ position: 'absolute', bottom: 10, left: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <VibeBadge crowd={v.crowd} />
-                    <DressBadge code={v.dressCode} />
-                    {v.eco && <EcoBadge />}
-                  </div>
-                  <div style={{ position: 'absolute', bottom: 10, right: 10 }}><PriceBadge cover={v.cover} /></div>
-                  {(v.accessible || v.hearingLoop) && (
-                    <div style={{ position: 'absolute', top: 44, right: 10 }}>
-                      <AccessibleBadge wheelchair={v.accessible} hearing={v.hearingLoop} />
+            {usuallyBusy.map(v => {
+              const crowd = getCrowdLabel(v.crowdPercent);
+              return (
+                <div key={v.id} onClick={() => onVenue(v)} style={{ flexShrink: 0, width: 240, cursor: 'pointer' }}>
+                  <div style={{ position: 'relative', height: 180, borderRadius: 16, overflow: 'hidden', marginBottom: 10 }}>
+                    <img src={v.image} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0.2), transparent)' }} />
+                    
+                    {/* Crowd with "Usually" prefix per audit */}
+                    <div style={{ position: 'absolute', top: 10, right: 10 }}>
+                      <CrowdBadge percent={v.crowdPercent} />
                     </div>
-                  )}
+                    
+                    <div style={{ position: 'absolute', bottom: 10, left: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <VibeBadge vibe={v.vibe} />
+                      <DressBadge code={v.dressCode} />
+                    </div>
+                    <div style={{ position: 'absolute', bottom: 10, right: 10 }}><PriceBadge cover={v.cover} /></div>
+                  </div>
+                  <p style={{ fontWeight: 700, fontSize: 16, margin: 0 }}>{v.name}</p>
+                  <p style={{ color: '#71717a', fontSize: 12, margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <MapPin size={12} /> {v.distance} • {v.type}
+                  </p>
                 </div>
-                <p style={{ fontWeight: 700, fontSize: 16, margin: 0 }}>{v.name}</p>
-                <p style={{ color: '#71717a', fontSize: 12, margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <MapPin size={12} /> {v.distance} • {v.type}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* No Results */}
-      {filteredVenues.length === 0 && (
-        <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-          <p style={{ color: '#71717a', fontSize: 16 }}>No venues match your filters</p>
-          <button onClick={() => { setActiveFilters([]); setCategory('all'); setSearch(''); }} style={{ ...styles.btn, margin: '16px auto 0' }}>
-            Clear Filters
-          </button>
+      {/* Categories */}
+      <div style={{ padding: '0 20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {CATEGORIES.filter(c => c.id !== 'all').map(c => (
+            <div key={c.name} onClick={() => setCategory(c.id)} style={{ ...styles.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#27272a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <c.icon size={18} color="#a1a1aa" />
+                </div>
+                <span style={{ fontWeight: 500 }}>{c.name}</span>
+              </div>
+              <ArrowUpRight size={16} color="#71717a" />
+            </div>
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
 // ============================================================================
-// MAP TAB
+// MAP TAB - Updated per audit (REMOVED "LIVE NET", added legend)
 // ============================================================================
 
 function MapTab({ onDistrict }) {
+  // District colors based on crowd level (with legend per audit)
+  const getDistrictColor = (level) => {
+    if (level === 'busy') return '#facc15';
+    if (level === 'moderate') return '#4ade80';
+    return '#22c55e';
+  };
+
   return (
     <div style={{ height: '100%', position: 'relative', backgroundColor: '#09090b' }}>
       <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -890,57 +1154,69 @@ function MapTab({ onDistrict }) {
         {[0,10,20,30,40,50,60,70,80,90,100].map(y => <line key={'h'+y} x1="0" y1={y} x2="100" y2={y} stroke="#27272a" strokeWidth="0.2" />)}
       </svg>
 
+      {/* Header - REMOVED "LIVE NET" per audit */}
       <div style={{ position: 'absolute', top: 48, left: 20, right: 20, display: 'flex', justifyContent: 'space-between', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: 'rgba(0,0,0,0.7)', padding: '8px 14px', borderRadius: 20 }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#22c55e' }} />
-          <span style={{ fontWeight: 700, fontSize: 13 }}>LIVE NET</span>
+          <MapPin size={16} color={ACCENT} />
+          <span style={{ fontWeight: 700, fontSize: 13 }}>Dallas Districts</span>
         </div>
         <div style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <MapPin size={20} color="white" />
         </div>
       </div>
 
-      {DISTRICTS.map(d => (
-        <div 
-          key={d.id} 
-          onClick={() => onDistrict(d)}
-          style={{ 
-            position: 'absolute', 
-            left: `${d.x}%`, 
-            top: `${d.y}%`, 
-            transform: 'translate(-50%, -50%)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            cursor: 'pointer'
-          }}
-        >
-          <div style={{
-            width: 60,
-            height: 60,
-            borderRadius: '50%',
-            backgroundColor: d.color + '20',
-            border: `2px solid ${d.color}60`,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 6
-          }}>
-            <span style={{ fontSize: 18, fontWeight: 700, color: d.color }}>{d.venues}</span>
-            <span style={{ fontSize: 9, color: '#a1a1aa' }}>VENUES</span>
+      {/* Legend - NEW per audit */}
+      <div style={{ position: 'absolute', bottom: 120, left: 20, backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, borderRadius: 12, zIndex: 10 }}>
+        <p style={{ fontSize: 11, color: '#71717a', margin: '0 0 8px', fontWeight: 600 }}>CROWD LEVELS</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#facc15' }} />
+            <span style={{ fontSize: 12, color: '#a1a1aa' }}>Usually Busy</span>
           </div>
-          <span style={{ fontSize: 9, fontWeight: 700, color: d.color, backgroundColor: 'rgba(0,0,0,0.8)', padding: '4px 8px', borderRadius: 6 }}>
-            {d.name}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#4ade80' }} />
+            <span style={{ fontSize: 12, color: '#a1a1aa' }}>Usually Moderate</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#22c55e' }} />
+            <span style={{ fontSize: 12, color: '#a1a1aa' }}>Usually Chill</span>
+          </div>
         </div>
-      ))}
+        <p style={{ fontSize: 10, color: '#52525b', margin: '8px 0 0', fontStyle: 'italic' }}>Based on patterns</p>
+      </div>
+
+      {/* Districts */}
+      {DISTRICTS.map(d => {
+        const color = getDistrictColor(d.crowdLevel);
+        return (
+          <div 
+            key={d.id} 
+            onClick={() => onDistrict(d)}
+            style={{ 
+              position: 'absolute', left: `${d.x}%`, top: `${d.y}%`, transform: 'translate(-50%, -50%)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer'
+            }}
+          >
+            <div style={{
+              width: 60, height: 60, borderRadius: '50%',
+              backgroundColor: color + '20', border: `2px solid ${color}60`,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: 6
+            }}>
+              <span style={{ fontSize: 18, fontWeight: 700, color }}>{d.venues}</span>
+              <span style={{ fontSize: 9, color: '#a1a1aa' }}>VENUES</span>
+            </div>
+            <span style={{ fontSize: 9, fontWeight: 700, color, backgroundColor: 'rgba(0,0,0,0.8)', padding: '4px 8px', borderRadius: 6 }}>
+              {d.name}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 // ============================================================================
-// EVENTS TAB
+// EVENTS TAB - Updated per audit (removed artist images, no "LIVE NOW")
 // ============================================================================
 
 function EventsTab({ events, venues, onEvent, onDiscover }) {
@@ -949,55 +1225,39 @@ function EventsTab({ events, venues, onEvent, onDiscover }) {
   return (
     <div style={styles.main}>
       <div style={{ padding: '48px 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>Tonight's Events</h1>
+        <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>Events</h1>
         <button onClick={onDiscover} style={{ ...styles.btn, padding: '10px 18px', fontSize: 14 }}>Discover</button>
       </div>
 
-      <div style={{ display: 'flex', gap: 16, overflowX: 'auto', padding: '0 20px 20px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 60, height: 60, borderRadius: '50%', border: '2px dashed #52525b', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#18181b' }}>
-            <Plus size={22} color="#71717a" />
-          </div>
-          <span style={{ fontSize: 11, color: '#71717a' }}>Add</span>
-        </div>
-        {PERFORMERS.map(p => (
-          <div key={p.id} onClick={() => alert(p.name + ' at ' + p.venue)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-            <div style={{ position: 'relative' }}>
-              <div style={{ width: 60, height: 60, borderRadius: '50%', padding: 2, background: p.isLive ? `linear-gradient(135deg, ${ACCENT}, #a855f7)` : '#3f3f46' }}>
-                <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-              </div>
-              {p.isLive && <span style={{ position: 'absolute', bottom: 0, right: 0, width: 14, height: 14, backgroundColor: '#22c55e', borderRadius: '50%', border: '2px solid #09090b' }} />}
-            </div>
-            <span style={{ fontSize: 11, color: '#a1a1aa', maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-          </div>
-        ))}
-      </div>
-
+      {/* Events List - NO artist images per audit */}
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {events.map(e => {
           const v = venues.find(x => x.id === e.venueId);
           return (
             <div key={e.id} onClick={() => onEvent(e)} style={{ ...styles.card, display: 'flex', alignItems: 'center', gap: 14, padding: 14, cursor: 'pointer' }}>
+              {/* Event image instead of artist per audit */}
               <div style={{ width: 72, height: 72, borderRadius: 12, backgroundColor: '#09090b', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
-                <img src={e.image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.3 }} />
+                <img src={e.image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
                 <div style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ color: '#a1a1aa', fontSize: 11, fontWeight: 700 }}>TODAY</span>
-                  <span style={{ color: 'white', fontSize: 22, fontWeight: 700 }}>{e.time}</span>
+                  <span style={{ color: '#a1a1aa', fontSize: 11, fontWeight: 700 }}>{e.date === 'Tonight' ? 'TODAY' : e.date.split(',')[0]}</span>
+                  <span style={{ color: 'white', fontSize: 18, fontWeight: 700 }}>{e.time}</span>
                 </div>
               </div>
+              
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
-                  {e.isLive && <LiveBadge />}
-                  {v && <VibeBadge crowd={v.crowd} />}
+                  {/* Changed from "LIVE NOW" to "Tonight" per audit */}
+                  {e.date === 'Tonight' && <TonightBadge />}
+                  {v && <VibeBadge vibe={v.vibe} />}
                 </div>
                 <p style={{ fontWeight: 700, fontSize: 16, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.name}</p>
                 <p style={{ color: ACCENT, fontWeight: 600, margin: '2px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.venue}</p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
                   <span style={{ color: '#71717a', fontSize: 13 }}>{e.district}</span>
-                  {v && <DressBadge code={v.dressCode} />}
                   <PriceBadge cover={e.cover} />
                 </div>
               </div>
+              
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
                 <button 
                   onClick={(ev) => { ev.stopPropagation(); setLikes({ ...likes, [e.id]: !likes[e.id] }); }}
@@ -1016,50 +1276,99 @@ function EventsTab({ events, venues, onEvent, onDiscover }) {
 }
 
 // ============================================================================
-// PROFILE TAB
+// PROFILE TAB - Updated per audit (removed Reviews/Friends, added Settings)
 // ============================================================================
 
 function ProfileTab({ venues, onVenue, checkIns }) {
+  const [showSettings, setShowSettings] = useState(false);
+  
   const recentCheckIns = [...checkIns].reverse().slice(0, 10);
   const uniqueVenueIds = [...new Set(checkIns.map(c => c.venueId))];
   const favoriteVenues = uniqueVenueIds.slice(0, 3).map(id => venues.find(v => v.id === id)).filter(Boolean);
 
+  if (showSettings) {
+    return (
+      <div style={styles.main}>
+        <div style={{ padding: '48px 20px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+            <button onClick={() => setShowSettings(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+              <ChevronLeft size={24} color="white" />
+            </button>
+            <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Settings</h1>
+          </div>
+
+          {/* Settings links per audit */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <button onClick={() => alert('Privacy Policy')} style={{ ...styles.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, cursor: 'pointer', width: '100%', textAlign: 'left', border: 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Lock size={20} color="#a1a1aa" />
+                <span>Privacy Policy</span>
+              </div>
+              <ExternalLink size={18} color="#52525b" />
+            </button>
+            <button onClick={() => alert('Terms of Service')} style={{ ...styles.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, cursor: 'pointer', width: '100%', textAlign: 'left', border: 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <FileText size={20} color="#a1a1aa" />
+                <span>Terms of Service</span>
+              </div>
+              <ExternalLink size={18} color="#52525b" />
+            </button>
+            <button onClick={() => alert('About KrowdGuide')} style={{ ...styles.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, cursor: 'pointer', width: '100%', textAlign: 'left', border: 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Info size={20} color="#a1a1aa" />
+                <span>About</span>
+              </div>
+              <ChevronRight size={18} color="#52525b" />
+            </button>
+          </div>
+
+          <p style={{ fontSize: 12, color: '#52525b', textAlign: 'center', marginTop: 32 }}>
+            KrowdGuide v1.0.0
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={styles.main}>
-      <div style={{ padding: '48px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ width: 100, height: 100, borderRadius: '50%', border: '4px solid #22c55e', overflow: 'hidden', marginBottom: 16 }}>
-          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80" alt="You" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
-        <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Alex Thompson</h1>
-        <p style={{ color: '#71717a', margin: '4px 0 0' }}>@alexthompson</p>
+      {/* Header with settings icon */}
+      <div style={{ padding: '48px 20px 0', display: 'flex', justifyContent: 'flex-end' }}>
+        <button onClick={() => setShowSettings(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 8 }}>
+          <Settings size={24} color="#a1a1aa" />
+        </button>
       </div>
 
-      {/* Stats */}
+      <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ width: 100, height: 100, borderRadius: '50%', border: '4px solid #22c55e', overflow: 'hidden', marginBottom: 16 }}>
+          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80" alt="You" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
+        <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Sarah Johnson</h1>
+        <p style={{ color: '#71717a', margin: '4px 0 0' }}>@sarahj</p>
+      </div>
+
+      {/* Stats - REMOVED Reviews and Friends per audit (features don't exist) */}
       <div style={{ padding: '0 20px', marginBottom: 32 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-          {[
-            { n: checkIns.length, l: 'Check-ins', I: CheckCircle },
-            { n: uniqueVenueIds.length, l: 'Venues', I: MapPin },
-            { n: 89, l: 'Friends', I: Users }
-          ].map(s => (
-            <div key={s.l} style={{ ...styles.card, textAlign: 'center', padding: 16 }}>
-              <s.I size={20} color="#71717a" style={{ marginBottom: 8 }} />
-              <p style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{s.n}</p>
-              <p style={{ color: '#71717a', fontSize: 12, margin: '4px 0 0' }}>{s.l}</p>
-            </div>
-          ))}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+          <div style={{ ...styles.card, textAlign: 'center', padding: 16 }}>
+            <CheckCircle size={20} color="#71717a" style={{ marginBottom: 8 }} />
+            <p style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{checkIns.length}</p>
+            <p style={{ color: '#71717a', fontSize: 12, margin: '4px 0 0' }}>Check-ins</p>
+          </div>
+          <div style={{ ...styles.card, textAlign: 'center', padding: 16 }}>
+            <MapPin size={20} color="#71717a" style={{ marginBottom: 8 }} />
+            <p style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{uniqueVenueIds.length}</p>
+            <p style={{ color: '#71717a', fontSize: 12, margin: '4px 0 0' }}>Venues</p>
+          </div>
         </div>
       </div>
 
       {/* Check-in History */}
       {recentCheckIns.length > 0 && (
         <div style={{ padding: '0 20px', marginBottom: 32 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-            <History size={18} color="#a1a1aa" />
-            <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Recent Check-ins</h2>
-          </div>
+          <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>Recent Check-ins</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {recentCheckIns.map((checkIn, i) => {
+            {recentCheckIns.slice(0, 5).map((checkIn, i) => {
               const v = venues.find(x => x.id === checkIn.venueId);
               if (!v) return null;
               return (
@@ -1093,8 +1402,7 @@ function ProfileTab({ venues, onVenue, checkIns }) {
               <div style={{ flex: 1 }}>
                 <p style={{ fontWeight: 700, margin: '0 0 6px' }}>{v.name}</p>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <VibeBadge crowd={v.crowd} />
-                  {v.eco && <EcoBadge />}
+                  <VibeBadge vibe={v.vibe} />
                 </div>
               </div>
               <ChevronRight size={18} color="#52525b" />
@@ -1111,27 +1419,21 @@ function ProfileTab({ venues, onVenue, checkIns }) {
 // ============================================================================
 
 export default function App() {
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const [tab, setTab] = useState('home');
   const [venues, setVenues] = useState(INITIAL_VENUES);
   const [venue, setVenue] = useState(null);
   const [discover, setDiscover] = useState(false);
   const [checkIns, setCheckIns] = useState([]);
 
-  // Personalized recommendations based on check-in history
   const recommendations = useMemo(() => {
     if (checkIns.length === 0) return [];
-    
-    // Get categories and dress codes from check-ins
     const checkedInVenueIds = checkIns.map(c => c.venueId);
     const checkedInVenues = venues.filter(v => checkedInVenueIds.includes(v.id));
-    
-    const preferredCategories = [...new Set(checkedInVenues.map(v => v.category))];
-    const preferredDressCodes = [...new Set(checkedInVenues.map(v => v.dressCode))];
-    
-    // Recommend similar venues not yet visited
+    const preferredVibes = [...new Set(checkedInVenues.map(v => v.vibe))];
     return venues
       .filter(v => !checkedInVenueIds.includes(v.id))
-      .filter(v => preferredCategories.includes(v.category) || preferredDressCodes.includes(v.dressCode))
+      .filter(v => preferredVibes.includes(v.vibe))
       .slice(0, 4);
   }, [venues, checkIns]);
 
@@ -1141,10 +1443,8 @@ export default function App() {
   };
 
   const handleCrowdReport = (venueId, crowdLevel) => {
-    setVenues(prev => prev.map(v => 
-      v.id === venueId ? { ...v, crowd: crowdLevel } : v
-    ));
-    alert('Thanks for reporting! Crowd level updated.');
+    setVenues(prev => prev.map(v => v.id === venueId ? { ...v, crowdPercent: crowdLevel } : v));
+    alert('Thanks for reporting! This helps others know before they go.');
   };
 
   const handleEvent = (e) => {
@@ -1152,17 +1452,15 @@ export default function App() {
     if (v) setVenue(v);
   };
 
+  // Show onboarding once per session
+  if (showOnboarding) {
+    return <OnboardingScreen onContinue={() => setShowOnboarding(false)} />;
+  }
+
   return (
     <div style={styles.app}>
-      {tab === 'home' && (
-        <HomeTab 
-          venues={venues} 
-          onVenue={setVenue} 
-          checkIns={checkIns}
-          recommendations={recommendations}
-        />
-      )}
-      {tab === 'map' && <MapTab onDistrict={d => alert(`${d.name}\n${d.venues} venues`)} />}
+      {tab === 'home' && <HomeTab venues={venues} onVenue={setVenue} checkIns={checkIns} recommendations={recommendations} />}
+      {tab === 'map' && <MapTab onDistrict={d => alert(`${d.name}\nUsually ${d.crowdLevel} on weekends\n${d.venues} venues`)} />}
       {tab === 'events' && <EventsTab events={EVENTS} venues={venues} onEvent={handleEvent} onDiscover={() => setDiscover(true)} />}
       {tab === 'profile' && <ProfileTab venues={venues} onVenue={setVenue} checkIns={checkIns} />}
 
@@ -1187,11 +1485,7 @@ export default function App() {
           <button 
             key={t.id}
             onClick={() => setTab(t.id)}
-            style={{
-              ...styles.navBtn,
-              backgroundColor: tab === t.id ? ACCENT : 'transparent',
-              color: tab === t.id ? 'white' : '#71717a'
-            }}
+            style={{ ...styles.navBtn, backgroundColor: tab === t.id ? ACCENT : 'transparent', color: tab === t.id ? 'white' : '#71717a' }}
           >
             <t.Icon size={22} />
           </button>
