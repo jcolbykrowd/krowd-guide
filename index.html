@@ -2,13 +2,95 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#09090b" />
-    <title>KrowdGuide</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KrowdGuide - Know Before You Go</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        background-color: #09090b;
+        color: #ffffff;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      
+      /* Scrollbar styling */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 46, 99, 0.3);
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 46, 99, 0.5);
+      }
+
+      /* Custom animations */
+      @keyframes gradient {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+      }
+
+      @keyframes bounce-in {
+        0% { transform: scale(0.5); opacity: 0; }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
+      }
+
+      @keyframes slide-up {
+        0% { transform: translateY(30px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+      }
+
+      @keyframes fade-in {
+        0% { opacity: 0; }
+        100% { opacity: 1; }
+      }
+
+      /* Focus states for accessibility */
+      button:focus-visible, 
+      a:focus-visible,
+      input:focus-visible {
+        outline: 2px solid #FF2E63;
+        outline-offset: 2px;
+      }
+
+      /* Reduced motion support */
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.0.0",
+    "react/": "https://esm.sh/react@^19.0.0/",
+    "react-dom/": "https://esm.sh/react-dom@^19.0.0/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.460.0"
+  }
+}
+</script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>
